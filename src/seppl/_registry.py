@@ -20,16 +20,7 @@ class Registry:
                  enforce_uniqueness: bool = True):
         """
         Initializes the registry. default_modules and env_modules are used as fallback option
-        in case no plugins are being obtained from the entry_points.
-
-        Entry points must have the format:
-
-        entry_points={
-            "entry_point_name": [
-                "plugin_name=plugin_module:plugin_class",
-            ]
-        }
-
+        in case no plugins are being obtained from entry_points.
 
         :param default_modules: the default modules to use for registering plugins, comma-separated string of module names or list of module names, ignored if None
         :type default_modules: str or list
@@ -40,22 +31,12 @@ class Registry:
         """
         self._plugins = dict()
         self._all_plugins = dict()
-
-        if default_modules is None:
-            default_modules = ""
-        if isinstance(default_modules, str):
-            self.default_modules = [x.strip() for x in default_modules.split(",")]
-        elif isinstance(default_modules, list):
-            self.default_modules = default_modules[:]
-        else:
-            raise Exception("default_modules must be either str or list, but got: %s" % str(type(default_modules)))
-
-        if env_modules is None:
-            env_modules = ""
-        self.env_modules = env_modules
-
         self._custom_modules = None
+        self._default_modules = None
+        self._env_modules = None
 
+        self.default_modules = default_modules
+        self.env_modules = env_modules
         self.enforce_uniqueness = enforce_uniqueness
 
     def _has_env_modules(self) -> bool:
@@ -65,7 +46,62 @@ class Registry:
         :return: True if set
         :rtype: bool
         """
-        return (len(self.env_modules) > 0) and (os.getenv(self.env_modules) is not None)
+        return (self._env_modules is not None) \
+               and (len(self._env_modules) > 0) \
+               and (os.getenv(self._env_modules) is not None) \
+               and (len(os.getenv(self._env_modules)) > 0)
+
+    @property
+    def default_modules(self) -> Optional[List[str]]:
+        """
+        Returns the default modules.
+
+        :return: the modules
+        :rtype: list
+        """
+        return self._default_modules
+
+    @default_modules.setter
+    def default_modules(self, modules: Optional[Union[str, List[str]]]):
+        """
+        Sets/unsets the default modules to use. Clears the plugin cache.
+
+        :param modules: the list of modules to use, None to unset
+        :type modules: list
+        """
+        if modules is None:
+            modules = ""
+        if isinstance(modules, str):
+            modules = [x.strip() for x in modules.split(",")]
+        elif isinstance(modules, list):
+            modules = modules[:]
+        else:
+            raise Exception("default_modules must be either str or list, but got: %s" % str(type(modules)))
+        if len(modules) == 0:
+            raise Exception("No default modules defined!")
+        self._default_modules = modules
+        self._plugins = dict()
+
+    @property
+    def env_modules(self) -> Optional[str]:
+        """
+        Returns the environment modules (if any).
+
+        :return: the modules, None if none set
+        :rtype: str
+        """
+        return self._env_modules
+
+    @env_modules.setter
+    def env_modules(self, modules: Optional[str]):
+        """
+        Sets/unsets the environment variable with the modules to use. Clears the plugin cache.
+
+        :param modules: the environment variable with the modules to use, None to unset
+        :type modules: str
+        """
+        self._env_modules = modules
+        self._plugins = dict()
 
     @property
     def custom_modules(self) -> Optional[List[str]]:
@@ -78,7 +114,7 @@ class Registry:
         return self._custom_modules
 
     @custom_modules.setter
-    def custom_modules(self, modules: Optional[List[str]]):
+    def custom_modules(self, modules: Optional[Union[str, List[str]]]):
         """
         Sets/unsets the custom modules to use. Clears the plugin cache.
 
@@ -96,8 +132,8 @@ class Registry:
         :return: the list of modules
         :rtype: list
         """
-        if self.custom_modules is not None:
-            return self.custom_modules
+        if (self._custom_modules is not None) and (len(self._custom_modules) > 0):
+            return self._custom_modules
 
         if self._has_env_modules():
             return [x.strip() for x in os.getenv(self.env_modules).split(",")]
@@ -195,6 +231,16 @@ class Registry:
     def plugins(self, group: str, c: Optional = None) -> Dict[str, Plugin]:
         """
         Returns the plugins for the specified class.
+
+        Entry points must have the format:
+
+        entry_points={
+            "group": [
+                "plugin_name=plugin_module:plugin_class",
+            ]
+        }
+        
+        When enforcing uniqueness, the "plugin_name" must be unique across all plugins.
 
         :param group: the entry point group to get the plugins for
         :type group: str
