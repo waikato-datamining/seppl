@@ -6,6 +6,8 @@ Changelog
 
 - added `generate_entry_points` helper method to easily generate the `entry_points` section
   for plugins, rather than manually maintaining it
+- added `generate_help` and `generate_plugin_usage` methods for generating documentation
+  for plugins
 
 
 0.0.2 (2023-10-04)
