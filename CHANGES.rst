@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.0.3 (????-??-??)
+------------------
+
+- added `generate_entry_points` helper method to easily generate the `entry_points` section
+  for plugins, rather than manually maintaining it
+
+
 0.0.2 (2023-10-04)
 ------------------
 

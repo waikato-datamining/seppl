@@ -145,6 +145,9 @@ MY_DEFAULT_MODULES = ",".join(
 # (comma-separated list)
 MY_ENV_MODULES = "MY_MODULES"
 
+# the entry point group to use in setup.py for the plugins.
+ENTRYPOINT_MYPLUGINS = "myplugins"
+
 # singleton of the Registry
 REGISTRY = Registry(default_modules=MY_DEFAULT_MODULES,
                     env_modules=MY_ENV_MODULES,
@@ -159,10 +162,10 @@ REGISTRY = Registry(default_modules=MY_DEFAULT_MODULES,
 using the following code:
 
 ```python
-from my.registry import REGISTRY
+from my.registry import REGISTRY, ENTRYPOINT_MYPLUGINS
 from seppl import Plugin
 
-plugins = REGISTRY.plugins("myplugins", Plugin)
+plugins = REGISTRY.plugins(ENTRYPOINT_MYPLUGINS, Plugin)
 for p in plugins:
     print(plugins[p].name())
 ```
@@ -183,11 +186,11 @@ with the following code:
 
 
 ```python
-from my.registry import REGISTRY
+from my.registry import REGISTRY, ENTRYPOINT_MYPLUGINS
 from seppl import Plugin, split_cmdline, split_args, args_to_objects
 
 cmdline = "other some-plugin -i /some/where/blah.txt dud"
-plugins = REGISTRY.plugins("myplugins", Plugin)
+plugins = REGISTRY.plugins(ENTRYPOINT_MYPLUGINS, Plugin)
 args = split_args(split_cmdline(cmdline), plugins.keys())
 parsed = args_to_objects(args, plugins, allow_global_options=False)
 for p in parsed:
@@ -204,3 +207,35 @@ Will output something like this:
 
 **NB:** The `allow_global_options` determines whether you can have options 
 preceding any plugin (hence *global* options).
+
+#### Generating the `entry_points` section
+
+You can generate the [entry_points](https://github.com/waikato-datamining/seppl-example/blob/main/src/my/usage/generate_entry_points.py)
+section from the available plugins automatically:
+
+```python
+from my.registry import REGISTRY, ENTRYPOINT_MYPLUGINS
+from seppl import Plugin, generate_entry_points
+
+# at development time, the entry_point group is irrelevant
+# you can use the class for filtering instead
+# (Plugin is the top-most class and will capture all in
+# the defined default modules)
+plugins = REGISTRY.plugins("", Plugin).values()
+entry_points = {
+    ENTRYPOINT_MYPLUGINS: plugins
+}
+print(generate_entry_points(entry_points))
+```
+
+This will output something like this:
+
+```python
+entry_points={
+    "myplugins": [
+        "dud=my.plugins:Dud",
+        "other=my.plugins:OtherPlugin",
+        "some-plugin=my.plugins:SomePlugin"
+    ]
+}
+```
