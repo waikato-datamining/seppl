@@ -46,9 +46,7 @@ class Plugin:
         :param ns: the parsed arguments
         :type ns: argparse.Namespace
         """
-        self.logging_level = ns.logging_level
-        self.logger_name = ns.logger_name
-        self._logger = None
+        pass
 
     def parse_args(self, args: List[str]) -> 'Plugin':
         """
