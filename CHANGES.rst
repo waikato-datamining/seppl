@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.0.3 (????-??-??)
+0.0.3 (2023-10-05)
 ------------------
 
 - added `generate_entry_points` helper method to easily generate the `entry_points` section
