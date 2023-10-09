@@ -85,6 +85,29 @@ the following two methods:
 * `_apply_args(self, ns: argparse.Namespace)`: in this method, you need to 
   transfer the parsed options into member variables of your plugin 
 
+#### Compatibility
+
+If you want to enable checks between pipeline components, then your plugins
+need to implement the appropriate mixins and implement the relevant methods:
+
+* `seppl.OutputProducer`: for plugins that generate data; the `generates` method
+  returns a list of classes that the plugin can output (typically only one).
+* `seppl.InputConsumer`: for plugins that consume data; the `accepts` method
+  returns a list of classes that the plugin can process.
+
+E.g., *reader* plugins would implement `OutputProducer`, *filters* would 
+implement both, `OutputProducer` and `InputConsumer`, and *writers* only
+`InputConsumer`.
+
+You can then run the `check_compatibility` method against your pipeline,
+i.e., a list of plugins, to see whether they are compatible. This method will
+raise an exception if plugins are not implementing the mixins or if there is
+no overlap between the generated/accepted classes.
+
+See the plugins in [plugins_comp.py](https://github.com/waikato-datamining/seppl-example/blob/main/src/my/plugins_comp.py)
+and [some example pipeline checks](https://github.com/waikato-datamining/seppl-example/blob/main/src/my/usage/compatibility.py)
+done with them. 
+
 
 ## Example
 

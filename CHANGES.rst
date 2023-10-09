@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.0.5 (2023-10-10)
+------------------
+
+- added `OutputProducer` and `InputConsumer` mixins that can be use for checking
+  the compatibility between pipeline components using the `check_compatibility`
+  function.
+
+
 0.0.4 (2023-10-09)
 ------------------
 
