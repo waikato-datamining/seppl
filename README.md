@@ -190,7 +190,7 @@ and list the plugin modules and the associated superclass, e.g.:
 ```python
     entry_points={
         "myplugins": [
-            "plguins=my.plugins:seppl.Plugin",
+            "plugins=my.plugins:seppl.Plugin",
         ],
     }
 ```
