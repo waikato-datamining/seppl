@@ -257,7 +257,8 @@ preceding any plugin (hence *global* options).
 
 #### Generating the `entry_points` section
 
-You can generate the [entry_points](https://github.com/waikato-datamining/seppl-example/blob/main/src/my/usage/generate_entry_points.py)
+When using the registry in `explicit` mode, you can generate the 
+[entry_points](https://github.com/waikato-datamining/seppl-example/blob/main/src/my/usage/generate_entry_points.py)
 section from the available plugins automatically:
 
 ```python
