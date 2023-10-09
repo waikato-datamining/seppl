@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.0.4 (2023-10-09)
+------------------
+
+- added support for `dynamic` mode which only requires listing the superclass of a plugin
+  and the module in which to look for these plugins (slower, but more convenient)
+
+
 0.0.3 (2023-10-05)
 ------------------
 

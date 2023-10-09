@@ -8,20 +8,70 @@ from typing import List, Union, Optional, Dict
 from pkg_resources import working_set
 
 from ._plugin import Plugin
+from ._types import get_class
+
+
+MODE_EXPLICIT = "explicit"
+MODE_DYNAMIC = "dynamic"
+MODES = [
+    MODE_EXPLICIT,
+    MODE_DYNAMIC,
+]
 
 
 class Registry:
     """
-    Registry for managing plugins that are identified by their names.
+    Registry for managing plugins derived from seppl.Plugin class.
+
+    Entry points must have the format:
+
+    1. explicit mode
+
+    Each plugin has to be listed by (unique) name ("plugin_name"), with the
+    module it resides in ("plugin_module") and its class name ("plugin_class"):
+
+    entry_points={
+        "group": [
+            "plugin_name=plugin_module:plugin_class",
+        ]
+    }
+
+    2. dynamic mode
+
+    Only the superclass is listed
+
+    entry_points={
+        "group": [
+            "unique_string=plugin_module:superclass_name",
+        ]
+    }
+
+    If a super class ("superclass_name1") has classes in multiple modules
+    ("plugin_module1", "plugin_module2"), then these modules need to be
+    listed separately:
+
+    entry_points={
+        "group": [
+            "unique_string1=plugin_module1:superclass_name1",
+            "unique_string2=plugin_module2:superclass_name1",
+            "unique_string3=plugin_module3:superclass_name2",
+            ...
+        ]
+    }
+
+    When enforcing uniqueness, the "plugin_name" must be unique across all plugins.
     """
 
-    def __init__(self, default_modules: Optional[Union[str, List[str]]] = None,
+    def __init__(self, mode: Optional[str] = MODE_EXPLICIT,
+                 default_modules: Optional[Union[str, List[str]]] = None,
                  env_modules: Optional[str] = None,
                  enforce_uniqueness: bool = True):
         """
         Initializes the registry. default_modules and env_modules are used as fallback option
         in case no plugins are being obtained from entry_points.
 
+        :param mode: how the registry parses the entry_points
+        :type mode: str
         :param default_modules: the default modules to use for registering plugins, comma-separated string of module names or list of module names, ignored if None
         :type default_modules: str or list
         :param env_modules: the environment variable to retrieve the modules from (overrides default ones)
@@ -29,12 +79,16 @@ class Registry:
         :param enforce_uniqueness: whether plugin names must be unique
         :type enforce_uniqueness: bool
         """
+        if mode not in MODES:
+            raise Exception("Unknown mode: %s" % mode)
+
         self._plugins = dict()
         self._all_plugins = dict()
         self._custom_modules = None
         self._default_modules = None
         self._env_modules = None
 
+        self.mode = mode
         self.default_modules = default_modules
         self.env_modules = env_modules
         self.enforce_uniqueness = enforce_uniqueness
@@ -157,6 +211,63 @@ class Registry:
             self._all_plugins[o.name()] = o
             d[o.name()] = o
 
+    def _init_plugin_class(self, c):
+        """
+        Initializes the class to restrict the plugins to.
+
+        :param c: the class, uses Plugin if None
+        :return: the plugin class
+        """
+        if c is None:
+            c = Plugin
+        elif not issubclass(c, Plugin):
+            raise Exception("Class '%s' is not derived from '%s'!" % (str(c), str(Plugin)))
+        return c
+
+    def _register_from_module(self, m: str, c: Optional = None):
+        """
+        Locates all the classes implementing the specified class in the module and
+        adds them to the dictionary.
+
+        :param m: the module to look for classes
+        :type m: str
+        :param c: the class that the plugins must be, any class derived from Plugin if None
+        """
+        c = self._init_plugin_class(c)
+        result = dict()
+
+        module = importlib.import_module(m)
+        for att_name in dir(module):
+            if att_name.startswith("_"):
+                continue
+            att = getattr(module, att_name)
+            if inspect.isclass(att) and issubclass(att, c):
+                try:
+                    p = att()
+                    self._register_plugin(result, p)
+                    result[p.name()] = p
+                except NotImplementedError:
+                    pass
+                except:
+                    print("Problem encountered instantiating: " + m + "." + att_name, file=sys.stderr)
+                    traceback.print_exc()
+
+        return result
+
+    def _register_from_modules(self, c: Optional = None):
+        """
+        Locates all the classes implementing the specified class and adds them to the dictionary.
+
+        :param c: the class that the plugins must be, any class derived from Plugin if None
+        """
+        c = self._init_plugin_class(c)
+        result = dict()
+
+        for m in self._get_modules():
+            result.update(self._register_from_module(m, c))
+
+        return result
+
     def _register_from_entry_point(self, group: str, c: Optional = None) -> Dict[str, Plugin]:
         """
         Generates a dictionary (name/object) for the specified entry_point group.
@@ -166,43 +277,23 @@ class Registry:
         :return: the generated dictionary
         :rtype: dict
         """
-        if c is None:
-            c = Plugin
+        c = self._init_plugin_class(c)
         result = dict()
+
         for item in working_set.iter_entry_points(group, None):
-            module = importlib.import_module(item.module_name)
-            cls = getattr(module, item.attrs[0])
-            if issubclass(cls, c):
-                self._register_plugin(result, cls())
-        return result
-
-    def _register_from_modules(self, c: Optional = None):
-        """
-        Locates all the classes implementing the specified class and adds them to the dictionary.
-
-        :param c: the class that the plugins must be, any class derived from Plugin if None
-        """
-        if c is None:
-            c = Plugin
-        elif not issubclass(c, Plugin):
-            raise Exception("Class '%s' is not derived from '%s'!" % (str(c), str(Plugin)))
-
-        result = dict()
-
-        for m in self._get_modules():
-            module = importlib.import_module(m)
-            for att in dir(module):
-                if att.startswith("_"):
-                    continue
-                cls = getattr(module, att)
-                if inspect.isclass(cls) and issubclass(cls, c):
-                    try:
-                        self._register_plugin(result, cls())
-                    except NotImplementedError:
-                        pass
-                    except:
-                        print("Problem encountered instantiating: " + m + "." + att, file=sys.stderr)
-                        traceback.print_exc()
+            # format: "plugin_name=plugin_module:plugin_class",
+            if self.mode == MODE_EXPLICIT:
+                cls = get_class(module_name=item.module_name, class_name=item.attrs[0])
+                if issubclass(cls, c):
+                    p = cls()
+                    self._register_plugin(result, p)
+                    result[p.name()] = p
+            # format: "unique_string=plugin_module:superclass_name",
+            elif self.mode == MODE_DYNAMIC:
+                c = get_class(full_class_name=".".join(item.attrs))
+                result.update(self._register_from_module(item.module_name, c))
+            else:
+                raise Exception("Unhandled mode: %s" % self.mode)
 
         return result
 
@@ -214,10 +305,7 @@ class Registry:
         :type group: str
         :param c: the class that the plugins must be, any class derived from Plugin if None
         """
-        if c is None:
-            c = Plugin
-        elif not issubclass(c, Plugin):
-            raise Exception("Class '%s' is not derived from '%s'!" % (str(c), str(Plugin)))
+        c = self._init_plugin_class(c)
 
         # from entry points
         plugins = self._register_from_entry_point(group, c=c)
@@ -231,16 +319,6 @@ class Registry:
     def plugins(self, group: str, c: Optional = None) -> Dict[str, Plugin]:
         """
         Returns the plugins for the specified class.
-
-        Entry points must have the format:
-
-        entry_points={
-            "group": [
-                "plugin_name=plugin_module:plugin_class",
-            ]
-        }
-        
-        When enforcing uniqueness, the "plugin_name" must be unique across all plugins.
 
         :param group: the entry point group to get the plugins for
         :type group: str

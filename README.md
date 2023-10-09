@@ -7,6 +7,14 @@ components with their own options.
 
 ### With `setup.py`
 
+*seppl* can operate in two different modes:
+
+* `explicit` - every single plugin needs to be listed (fast)
+* `dynamic` - only superclass and module need to be supplied for initializing 
+  a plugin class hierarchy (slower, due to analyzing code)
+
+#### Explicit mode
+
 Here is the format to use in the `entry_points` section of your `setup.py`:
 
 ```python
@@ -22,6 +30,25 @@ Here is the format to use in the `entry_points` section of your `setup.py`:
 * `plugin_name`: the name of the plugin (as returned by the `name()` method of the plugin)
 * `plugin_module`: the name of the module that contains the plugin class
 * `plugin_class`: the class name of the plugin
+
+
+#### Dynamic mode
+
+Here is the format to use in the `entry_points` section of your `setup.py`:
+
+```python
+        entry_points={
+            "group": [
+                "unique_string=plugin_module:super_class",
+            ]
+        }
+```
+
+* `group`: an arbitrary name that identifies a set of plugins that you want to 
+  retrieve (e.g., one set for input plugins, another for output plugins)
+* `unique_string`: an arbitrary, unique string that identifies this line
+* `plugin_module`: the name of the module that contains the plugins
+* `super_class`: the fully qualified superclass name that the plugins need to belong to 
 
 
 ### Without `setup.py`
@@ -111,7 +138,7 @@ class Dud(Plugin):
         return "Dummy plugin."
 ```
 
-### `setup.py`
+### `setup.py` (explicit)
 
 Add a custom entry point to the `entry_points` section of your [setup.py](https://github.com/waikato-datamining/seppl-example/blob/main/setup.py) 
 and list the plugins, e.g.:
@@ -126,6 +153,19 @@ and list the plugins, e.g.:
     }
 ```
 
+### `setup.py` (dynamic)
+
+Add a custom entry point to the `entry_points` section of your [setup.py](https://github.com/waikato-datamining/seppl-example/blob/main/setup_dynamic.py) 
+and list the plugin modules and the associated superclass, e.g.:
+
+```python
+    entry_points={
+        "myplugins": [
+            "plguins=my.plugins:seppl.Plugin",
+        ],
+    }
+```
+
 ### Registry
 
 You can instantiate a `seppl.Registry` singleton as follows (e.g., in the 
@@ -133,7 +173,7 @@ You can instantiate a `seppl.Registry` singleton as follows (e.g., in the
 module in your project):
 
 ```python
-from seppl import Registry
+from seppl import Registry, MODE_EXPLICIT, MODE_DYNAMIC
 
 # the default modules to look for plugins
 MY_DEFAULT_MODULES = ",".join(
@@ -148,10 +188,17 @@ MY_ENV_MODULES = "MY_MODULES"
 # the entry point group to use in setup.py for the plugins.
 ENTRYPOINT_MYPLUGINS = "myplugins"
 
-# singleton of the Registry
-REGISTRY = Registry(default_modules=MY_DEFAULT_MODULES,
+# singleton of the Registry (in explicit mode)
+REGISTRY = Registry(mode=MODE_EXPLICIT,
+                    default_modules=MY_DEFAULT_MODULES,
                     env_modules=MY_ENV_MODULES,
                     enforce_uniqueness=True)
+
+# singleton of the Registry (in dynamic mode)
+#REGISTRY = Registry(mode=MODE_DYNAMIC,
+#                    default_modules=MY_DEFAULT_MODULES,
+#                    env_modules=MY_ENV_MODULES,
+#                    enforce_uniqueness=True)
 ```
 
 ### Using the registry
