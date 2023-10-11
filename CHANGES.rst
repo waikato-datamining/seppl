@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.0.6 (2023-10-11)
+------------------
+
+- enforcement of uniqueness is now checking whether the class names differ
+  before raising an exception.
+
+
 0.0.5 (2023-10-10)
 ------------------
 

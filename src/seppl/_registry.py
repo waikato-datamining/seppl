@@ -8,7 +8,7 @@ from typing import List, Union, Optional, Dict
 from pkg_resources import working_set
 
 from ._plugin import Plugin
-from ._types import get_class
+from ._types import get_class, get_class_name
 
 
 MODE_EXPLICIT = "explicit"
@@ -205,8 +205,9 @@ class Registry:
         :type o: CommandlineHandler
         """
         if self.enforce_uniqueness and (o.name() in self._all_plugins):
-            raise Exception("Duplicate plugin name encountered: name=%s, existing type=%s, new type=%s)"
-                            % (o.name(), str(type(self._all_plugins[o.name()])), str(type(o))))
+            if get_class_name(self._all_plugins[o.name()]) != get_class_name(o):
+                raise Exception("Duplicate plugin name encountered: name=%s, existing type=%s, new type=%s)"
+                                % (o.name(), str(type(self._all_plugins[o.name()])), str(type(o))))
         else:
             self._all_plugins[o.name()] = o
             d[o.name()] = o
