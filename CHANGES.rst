@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.8 (2023-11-10)
+------------------
+
+- suppressing help output for unknown args now
+
+
 0.0.7 (2023-11-09)
 ------------------
 

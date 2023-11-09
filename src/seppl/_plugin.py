@@ -41,7 +41,7 @@ class Plugin:
             description=self.description(),
             prog=self.name(),
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-        parser.add_argument(UNKNOWN_ARGS, nargs=argparse.REMAINDER)
+        parser.add_argument(UNKNOWN_ARGS, nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
