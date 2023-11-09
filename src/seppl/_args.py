@@ -52,7 +52,7 @@ def split_args(args: List[str], handlers: List[str]) -> Dict[str, List[str]]:
     return result
 
 
-def args_to_objects(args: Dict[str, List[str]], valid_plugins: Dict[str, Plugin], allow_global_options: bool = False) -> List[Plugin]:
+def args_to_objects(args: Dict[str, List[str]], valid_plugins: Dict[str, Plugin], allow_global_options: bool = False, allow_unknown_args: bool = False) -> List[Plugin]:
     """
     Instantiates the plugins from the parsed arguments dictionary.
 
@@ -62,6 +62,8 @@ def args_to_objects(args: Dict[str, List[str]], valid_plugins: Dict[str, Plugin]
     :type valid_plugins: dict
     :param allow_global_options: whether global options are allowed (ie options that don't follow a plugin name)
     :type allow_global_options: bool
+    :param allow_unknown_args: whether to allow unknown args (eg typos or unknown plugins)
+    :type allow_unknown_args: bool
     :return: the list of instantiated plugins
     :rtype: list
     """
@@ -75,7 +77,9 @@ def args_to_objects(args: Dict[str, List[str]], valid_plugins: Dict[str, Plugin]
 
         name = args[key][0]
         plugin = copy.deepcopy(valid_plugins[name])
-        plugin.parse_args(args[key][1:])
+        unknown = plugin.parse_args(args[key][1:])
+        if not allow_unknown_args and (len(unknown) > 0):
+            raise Exception("Found unknown argument(s) for plugin '%s': %s" % (plugin.name(), str(unknown)))
         result.append(plugin)
     return result
 

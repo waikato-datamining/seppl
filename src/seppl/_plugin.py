@@ -4,6 +4,9 @@ from typing import List
 from ._types import classes_to_str
 
 
+UNKNOWN_ARGS = "unknown_args"
+
+
 class Plugin:
     """
     Base class for plugins.
@@ -38,6 +41,7 @@ class Plugin:
             description=self.description(),
             prog=self.name(),
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        parser.add_argument(UNKNOWN_ARGS, nargs=argparse.REMAINDER)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -49,18 +53,19 @@ class Plugin:
         """
         pass
 
-    def parse_args(self, args: List[str]) -> 'Plugin':
+    def parse_args(self, args: List[str]) -> list:
         """
         Parses the command-line arguments.
 
         :param args: the arguments to parse
         :type args: list
-        :return: itself
-        :rtype: Plugin
+        :return: any unknown args
+        :rtype: list
         """
         parser = self._create_argparser()
-        self._apply_args(parser.parse_args(args))
-        return self
+        ns = parser.parse_args(args)
+        self._apply_args(ns)
+        return ns.unknown_args
 
     def print_help(self):
         """

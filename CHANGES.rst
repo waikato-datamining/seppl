@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.0.7 (2023-11-09)
+------------------
+
+- `Plugin.parse_args` now returns any unparsed arguments that were found
+- the `args_to_objects` method now raises an Exception by default when
+  unknown arguments are encountered for a plugin (can be controlled with
+  the `allow_unknown_args` parameter)
+
+
 0.0.6 (2023-10-11)
 ------------------
 
