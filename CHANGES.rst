@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.0.10 (2023-11-15)
+-------------------
+
+- the registry now inspects modules when environment modules are present even when
+  it already found plugins (eg default ones)
+
+
 0.0.9 (2023-11-15)
 ------------------
 
