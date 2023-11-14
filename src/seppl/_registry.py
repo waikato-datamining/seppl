@@ -311,9 +311,9 @@ class Registry:
         # from entry points
         plugins = self._register_from_entry_point(group, c=c)
 
-        # fall back on modules?
-        if len(plugins) == 0:
-            plugins = self._register_from_modules(c=c)
+        # inspect modules as well?
+        if (len(plugins) == 0) or ((self._custom_modules is not None) and (len(self._custom_modules) > 0)):
+            plugins.update(self._register_from_modules(c=c))
 
         self._plugins[group] = plugins
 
