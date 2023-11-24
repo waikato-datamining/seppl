@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.0.11 (????-??-??)
+-------------------
+
+- the `DEFAULT` placeholder in the environment variable listing the modules now
+  gets expanded to the default modules, making it easier to specify modules
+  in derived projects
+
+
 0.0.10 (2023-11-15)
 -------------------
 

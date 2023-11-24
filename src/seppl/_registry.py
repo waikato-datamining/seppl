@@ -18,6 +18,9 @@ MODES = [
     MODE_DYNAMIC,
 ]
 
+DEFAULT = "DEFAULT"
+""" the placeholder for the default modules in the environment variable. """
+
 
 class Registry:
     """
@@ -60,6 +63,10 @@ class Registry:
     }
 
     When enforcing uniqueness, the "plugin_name" must be unique across all plugins.
+
+    You can use the placeholder DEFAULT in the environment variable to represent the
+    default modules. This avoids having to update the env variable whenever the default
+    modules change.
     """
 
     def __init__(self, mode: Optional[str] = MODE_EXPLICIT,
@@ -178,6 +185,22 @@ class Registry:
         self._custom_modules = modules
         self._plugins = dict()
 
+    def _expand_default_modules_placeholder(self, m: str) -> str:
+        """
+        Expands the DEFAULT modules placeholder in the comma-separated modules string.
+
+        :param m: the modules string to expand
+        :type m: str
+        :return: the expanded modules string
+        :rtype: str
+        """
+        if DEFAULT in m:
+            if len(self.default_modules) > 0:
+                m = m.replace(DEFAULT, ",".join(self.default_modules))
+            else:
+                m = m.replace(DEFAULT, "")
+        return m
+
     def _get_modules(self) -> List[str]:
         """
         Returns list the of modules to fall back on.
@@ -190,7 +213,8 @@ class Registry:
             return self._custom_modules
 
         if self._has_env_modules():
-            return [x.strip() for x in os.getenv(self.env_modules).split(",")]
+            m = self._expand_default_modules_placeholder(os.getenv(self.env_modules))
+            return [x.strip() for x in m.split(",")]
 
         return self.default_modules[:]
 
