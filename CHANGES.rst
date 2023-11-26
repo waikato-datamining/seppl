@@ -7,6 +7,10 @@ Changelog
 - the `DEFAULT` placeholder in the environment variable listing the modules now
   gets expanded to the default modules, making it easier to specify modules
   in derived projects
+- added `excluded_modules` and `excluded_env_modules` to `Registry` class
+  initializer to allow user to specify modules (explicit list or list from env
+  variable) to be excluded from being registered; useful when outputting
+  help for derived modules that shouldn't output all the base plugins as well.
 
 
 0.0.10 (2023-11-15)

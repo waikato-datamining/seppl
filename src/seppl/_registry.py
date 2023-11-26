@@ -67,11 +67,17 @@ class Registry:
     You can use the placeholder DEFAULT in the environment variable to represent the
     default modules. This avoids having to update the env variable whenever the default
     modules change.
+
+    With `excluded_modules` and `excluded_env_modules` you can avoid modules being
+    included in the registry, e.g., when generating help output for dependent modules
+    (and you don't want all the base plugins to be output as well).
     """
 
     def __init__(self, mode: Optional[str] = MODE_EXPLICIT,
                  default_modules: Optional[Union[str, List[str]]] = None,
                  env_modules: Optional[str] = None,
+                 excluded_modules: Optional[Union[str, List[str]]] = None,
+                 excluded_env_modules: Optional[str] = None,
                  enforce_uniqueness: bool = True):
         """
         Initializes the registry. default_modules and env_modules are used as fallback option
@@ -79,10 +85,14 @@ class Registry:
 
         :param mode: how the registry parses the entry_points
         :type mode: str
-        :param default_modules: the default modules to use for registering plugins, comma-separated string of module names or list of module names, ignored if None
+        :param default_modules: the default modules to use for registering plugins, comma-separated string of module names or list of module names
         :type default_modules: str or list
         :param env_modules: the environment variable to retrieve the modules from (overrides default ones)
         :type env_modules: str
+        :param excluded_modules: the modules to exclude from registering plugins, comma-separated string of module names or list of module names, ignored if None
+        :type excluded_modules: str or list
+        :param excluded_env_modules: the environment variable to retrieve the excluded modules from (overrides manually set ones)
+        :type excluded_env_modules: str
         :param enforce_uniqueness: whether plugin names must be unique
         :type enforce_uniqueness: bool
         """
@@ -94,13 +104,17 @@ class Registry:
         self._custom_modules = None
         self._default_modules = None
         self._env_modules = None
+        self._excluded_modules = None
+        self._excluded_env_modules = None
 
         self.mode = mode
         self.default_modules = default_modules
         self.env_modules = env_modules
+        self.excluded_modules = excluded_modules
+        self._excluded_env_modules = excluded_env_modules
         self.enforce_uniqueness = enforce_uniqueness
 
-    def _has_env_modules(self) -> bool:
+    def has_env_modules(self) -> bool:
         """
         Checks whether an environment variable for modules is set.
 
@@ -111,6 +125,18 @@ class Registry:
                and (len(self._env_modules) > 0) \
                and (os.getenv(self._env_modules) is not None) \
                and (len(os.getenv(self._env_modules)) > 0)
+
+    def has_excluded_env_modules(self) -> bool:
+        """
+        Checks whether an environment variable for excluded modules is set.
+
+        :return: True if set
+        :rtype: bool
+        """
+        return (self._excluded_env_modules is not None) \
+               and (len(self._excluded_env_modules) > 0) \
+               and (os.getenv(self._excluded_env_modules) is not None) \
+               and (len(os.getenv(self._excluded_env_modules)) > 0)
 
     @property
     def default_modules(self) -> Optional[List[str]]:
@@ -141,6 +167,35 @@ class Registry:
         if len(modules) == 0:
             raise Exception("No default modules defined!")
         self._default_modules = modules
+        self._plugins = dict()
+
+    @property
+    def excluded_modules(self) -> Optional[List[str]]:
+        """
+        Returns the excluded modules.
+
+        :return: the modules
+        :rtype: list
+        """
+        return self._excluded_modules
+
+    @excluded_modules.setter
+    def excluded_modules(self, modules: Optional[Union[str, List[str]]]):
+        """
+        Sets/unsets the excluded modules to use. Clears the plugin cache.
+
+        :param modules: the list of modules to exclude, None to unset
+        :type modules: list
+        """
+        if modules is None:
+            modules = ""
+        if isinstance(modules, str):
+            modules = [x.strip() for x in modules.split(",")]
+        elif isinstance(modules, list):
+            modules = modules[:]
+        else:
+            raise Exception("excluded_modules must be either str or list, but got: %s" % str(type(modules)))
+        self._excluded_modules = modules
         self._plugins = dict()
 
     @property
@@ -201,7 +256,7 @@ class Registry:
                 m = m.replace(DEFAULT, "")
         return m
 
-    def _get_modules(self) -> List[str]:
+    def actual_fallback_modules(self) -> List[str]:
         """
         Returns list the of modules to fall back on.
         Precedence: custom_modules > env_modules > default_modules
@@ -212,13 +267,46 @@ class Registry:
         if (self._custom_modules is not None) and (len(self._custom_modules) > 0):
             return self._custom_modules
 
-        if self._has_env_modules():
+        if self.has_env_modules():
             m = self._expand_default_modules_placeholder(os.getenv(self.env_modules))
             return [x.strip() for x in m.split(",")]
 
         return self.default_modules[:]
 
-    def _register_plugin(self, d: Dict[str, Plugin], o: Plugin):
+    def actual_excluded_modules(self) -> List[str]:
+        """
+        Returns list the of excluded modules.
+        Precedence: excluded_env_modules > excluded_modules
+
+        :return: the list of modules
+        :rtype: list
+        """
+        if self.has_excluded_env_modules():
+            m = self._expand_default_modules_placeholder(os.getenv(self._excluded_env_modules))
+            return [x.strip() for x in m.split(",")]
+
+        return self.excluded_modules[:]
+
+    def is_excluded(self, o: Union[str, Plugin]) -> bool:
+        """
+        Checks whether the plugin object or plugin classname fall into an excluded module.
+
+        :param o: the plugin classname/object to check
+        :return: True if excluded, otherwise False
+        """
+        result = False
+        excl = self.actual_excluded_modules()
+        if isinstance(o, str):
+            classname = o
+        else:
+            classname = get_class_name(o)
+        for m in excl:
+            if classname.startswith(m + "."):
+                result = True
+                break
+        return result
+
+    def _register_plugin(self, d: Dict[str, Plugin], o: Plugin) -> bool:
         """
         Adds the plugin to the registry dictionary under its name.
         Ensures that names are unique and throws an Exception if not.
@@ -227,7 +315,11 @@ class Registry:
         :type d: dict
         :param o: the plugin to register
         :type o: CommandlineHandler
+        :return: whether it was registered
+        :rtype: bool
         """
+        if self.is_excluded(o):
+            return False
         if self.enforce_uniqueness and (o.name() in self._all_plugins):
             if get_class_name(self._all_plugins[o.name()]) != get_class_name(o):
                 raise Exception("Duplicate plugin name encountered: name=%s, existing type=%s, new type=%s)"
@@ -235,6 +327,7 @@ class Registry:
         else:
             self._all_plugins[o.name()] = o
             d[o.name()] = o
+        return True
 
     def _init_plugin_class(self, c):
         """
@@ -269,8 +362,8 @@ class Registry:
             if inspect.isclass(att) and issubclass(att, c):
                 try:
                     p = att()
-                    self._register_plugin(result, p)
-                    result[p.name()] = p
+                    if self._register_plugin(result, p):
+                        result[p.name()] = p
                 except NotImplementedError:
                     pass
                 except:
@@ -288,7 +381,7 @@ class Registry:
         c = self._init_plugin_class(c)
         result = dict()
 
-        for m in self._get_modules():
+        for m in self.actual_fallback_modules():
             result.update(self._register_from_module(m, c))
 
         return result
@@ -311,8 +404,8 @@ class Registry:
                 cls = get_class(module_name=item.module_name, class_name=item.attrs[0])
                 if issubclass(cls, c):
                     p = cls()
-                    self._register_plugin(result, p)
-                    result[p.name()] = p
+                    if self._register_plugin(result, p):
+                        result[p.name()] = p
             # format: "unique_string=plugin_module:superclass_name",
             elif self.mode == MODE_DYNAMIC:
                 c = get_class(full_class_name=".".join(item.attrs))
@@ -336,7 +429,7 @@ class Registry:
         plugins = self._register_from_entry_point(group, c=c)
 
         # register from modules as well?
-        if (len(plugins) == 0) or ((self._custom_modules is not None) and (len(self._custom_modules) > 0)) or self._has_env_modules():
+        if (len(plugins) == 0) or ((self._custom_modules is not None) and (len(self._custom_modules) > 0)) or self.has_env_modules():
             plugins.update(self._register_from_modules(c=c))
 
         self._plugins[group] = plugins
