@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.0.11 (????-??-??)
+0.0.11 (2023-11-27)
 -------------------
 
 - the `DEFAULT` placeholder in the environment variable listing the modules now
