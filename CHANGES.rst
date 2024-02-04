@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.12 (????-??-??)
+-------------------
+
+- added basic support for meta-data: MetaDataHandler, get_metadata, add_metadata
+
+
 0.0.11 (2023-11-27)
 -------------------
 
