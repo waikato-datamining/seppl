@@ -6,6 +6,7 @@ Changelog
 
 - added basic support for meta-data: MetaDataHandler, get_metadata, add_metadata
 - added support for splitting sequences using supplied split (int) ratios
+- added basic session support: Session, SessionHandler
 
 
 0.0.11 (2023-11-27)
