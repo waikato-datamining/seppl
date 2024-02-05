@@ -1,12 +1,14 @@
 Changelog
 =========
 
-0.0.12 (????-??-??)
--------------------
+0.1.0 (2024-02-05)
+------------------
 
 - added basic support for meta-data: MetaDataHandler, get_metadata, add_metadata
-- added support for splitting sequences using supplied split (int) ratios
-- added basic session support: Session, SessionHandler
+- added support for splitting sequences using supplied (int) split ratios
+- added session support: Session, SessionHandler
+- added I/O super classes: Reader, Writer, StreamWriter, BatchWriter, Filter, MultiFilter
+- added support for executing I/O pipelines: Reader, [Filter...], [Writer]
 
 
 0.0.11 (2023-11-27)

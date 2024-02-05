@@ -1,7 +1,12 @@
 import argparse
+import logging
+import sys
+import traceback
 
 from typing import List
-from ._types import classes_to_str
+from ._types import classes_to_str, get_class_name
+
+from wai.logging import LOGGING_WARNING, set_logging_level, add_logging_level, add_logger_name
 
 
 UNKNOWN_ARGS = "unknown_args"
@@ -83,6 +88,81 @@ class Plugin:
         return self._create_argparser().format_help()
 
 
+class LoggingHandler(object):
+    """
+    Mixin for classes that support logging
+    """
+
+    def logger(self) -> logging.Logger:
+        """
+        Returns the logger instance to use.
+
+        :return: the logger
+        :rtype: logging.Logger
+        """
+        raise NotImplementedError()
+
+
+class PluginWithLogging(Plugin, LoggingHandler):
+    """
+    Plugin that handles logging.
+    """
+
+    def __init__(self, logger_name: str = None, logging_level: str = LOGGING_WARNING):
+        """
+        Initializes the handler.
+
+        :param logger_name: the name to use for the logger
+        :type logger_name: str
+        :param logging_level: the logging level to use
+        :type logging_level: str
+        """
+        super().__init__()
+        self.logging_level = logging_level
+        self.logger_name = logger_name
+        self._logger = None
+
+    def logger(self) -> logging.Logger:
+        """
+        Returns the logger instance to use.
+
+        :return: the logger
+        :rtype: logging.Logger
+        """
+        if self._logger is None:
+            if (self.logger_name is not None) and (len(self.logger_name) > 0):
+                logger_name = self.logger_name
+            else:
+                logger_name = self.name()
+            self._logger = logging.getLogger(logger_name)
+            set_logging_level(self._logger, self.logging_level)
+        return self._logger
+
+    def _create_argparser(self) -> argparse.ArgumentParser:
+        """
+        Creates an argument parser. Derived classes need to fill in the options.
+
+        :return: the parser
+        :rtype: argparse.ArgumentParser
+        """
+        parser = super()._create_argparser()
+        add_logging_level(parser)
+        add_logger_name(parser, help_str="The custom name to use for the logger, uses the plugin name by default")
+        return parser
+
+    def _apply_args(self, ns: argparse.Namespace):
+        """
+        Initializes the object with the arguments of the parsed namespace.
+
+        :param ns: the parsed arguments
+        :type ns: argparse.Namespace
+        """
+        super()._apply_args(ns)
+        self.logging_level = ns.logging_level
+        self.logger_name = ns.logger_name
+        self._logger = None
+
+
 class OutputProducer(object):
     """
     Mixin for classes that generate output.
@@ -111,6 +191,56 @@ class InputConsumer(object):
         :rtype: list
         """
         raise NotImplementedError()
+
+
+class Initializable(LoggingHandler):
+    """
+    Mixin for classes that require initialization and finalization
+    """
+
+    def initialize(self):
+        """
+        Initializes the processing, e.g., for opening files or databases.
+        """
+        self.logger().info("Initializing...")
+
+    def finalize(self):
+        """
+        Finishes the processing, e.g., for closing files or databases.
+        """
+        self.logger().info("Finalizing...")
+
+
+def init_initializable(handler: Initializable, handler_type: str, raise_again: bool = False) -> bool:
+    """
+    Initializes the commandline handler and outputs the stacktrace and help screen
+    if it fails to do so. Optionally, the exception can be raised again (to propagate).
+
+    :param handler: the handler to initialize
+    :type handler: CommandlineHandler
+    :param handler_type: the name of the type to use in the error message (eg "reader")
+    :type handler_type: str
+    :param raise_again: whether to raise the Exception again
+    :type raise_again: bool
+    :return: whether the initialization was successful
+    :rtype: str
+    """
+    try:
+        handler.initialize()
+        return True
+    except Exception as e:
+        if isinstance(handler, Plugin):
+            print("\nFailed to initialize %s '%s':\n" % (handler_type, handler.name()), file=sys.stderr)
+        else:
+            print("\nFailed to initialize %s '%s':\n" % (handler_type, get_class_name(handler)), file=sys.stderr)
+        traceback.print_exc()
+        if isinstance(handler, Plugin):
+            print()
+            handler.print_help()
+            print()
+        if raise_again:
+            raise e
+        return False
 
 
 def check_compatibility(plugins: List[Plugin]):
