@@ -270,6 +270,12 @@ def check_compatibility(plugins: List[Plugin]):
             if class1 in classes2:
                 compatible = True
                 break
+            for class2 in classes2:
+                if issubclass(class1, class2):
+                    compatible = True
+                    break
+            if compatible:
+                break
         if not compatible:
             raise Exception(
                 "Output(s) of " + index1 + "/" + plugin1.name()
