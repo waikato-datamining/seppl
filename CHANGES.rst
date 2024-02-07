@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.1.1 (????-??-??)
+0.1.1 (2024-02-07)
 ------------------
 
 - `check_compatibility` method now also checks whether generated class is
