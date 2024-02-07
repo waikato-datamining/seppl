@@ -14,6 +14,7 @@ def gcd(values: List[int]):
     """
     if len(values) < 2:
         raise Exception("At least two numbers required for gcd!")
+    values = values[:]
     result = values.pop(0)
     while len(values) > 0:
         b = values.pop(0)

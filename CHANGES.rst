@@ -6,6 +6,7 @@ Changelog
 
 - `check_compatibility` method now also checks whether generated class is
   subclass of accepted classes, to allow for broader `accepts()` methods
+- `gcd` method now creates a copy of the integer ratio list before processing it
 
 
 0.1.0 (2024-02-05)
