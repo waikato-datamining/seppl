@@ -30,7 +30,13 @@ setup(
         '': 'src'
     },
     packages=find_namespace_packages(where='src'),
-    version="0.1.1",
+    version="0.1.2",
     author='Peter Reutemann',
     author_email='fracpete@waikato.ac.nz',
+    entry_points={
+        "console_scripts": [
+            "seppl-escape=seppl.tool.escape:sys_main",
+            "seppl-unescape=seppl.tool.unescape:sys_main",
+        ],
+    },
 )

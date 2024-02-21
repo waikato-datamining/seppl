@@ -115,6 +115,23 @@ and [some example pipeline checks](https://github.com/waikato-datamining/seppl-e
 done with them. 
 
 
+### Unicode characters
+
+The following methods can be used for escaping/unescaping unicode characters
+to make them copyable into remote ssh sessions:
+
+* `seppl.escape_args`
+* `seppl.unescape_args`
+
+
+### Tools
+
+The following command-line tools are available:
+
+* `seppl-escape`: for escaping unicode characters
+* `seppl-unescape`: for unescaping unicode characters
+
+
 ## Example
 
 Below is a toy example of how to make use of the `seppl` library

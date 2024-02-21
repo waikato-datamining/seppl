@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.1.2 (2024-02-22)
+------------------
+
+- added methods `escape_args` and `unescape_args` (and corresponding command-line
+  tools `seppl-escape` and `seppl-unescape`) for escaping/unescaping unicode
+  characters in command-lines to make them copyable across ssh sessions
+
+
 0.1.1 (2024-02-07)
 ------------------
 

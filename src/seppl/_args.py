@@ -5,19 +5,54 @@ from typing import List, Dict, Tuple, Iterable
 from ._plugin import Plugin
 
 
-def split_cmdline(cmdline: str) -> List[str]:
+def escape_args(args: List[str]) -> List[str]:
+    """
+    Escapes any unicode characters in the arguments.
+
+    :param args: the arguments to process
+    :type args: list
+    :return: the (potentially) updated arguments
+    :rtype: list
+    """
+    result = []
+    for arg in args:
+        result.append(arg.encode("unicode_escape").decode())
+    return result
+
+
+def unescape_args(args: List[str]) -> List[str]:
+    """
+    Unescapes unicode characters in the arguments.
+
+    :param args: the arguments to process
+    :type args: list
+    :return: the (potentially) updated arguments
+    :rtype: list
+    """
+    result = []
+    for arg in args:
+        result.append(arg.encode().decode("unicode_escape"))
+    return result
+
+
+def split_cmdline(cmdline: str, unescape: bool = False) -> List[str]:
     """
     Splits the command-line into arguments.
 
     :param cmdline: the commandline to split
     :type cmdline: str
+    :param unescape: whether to unescape unicode chars
+    :type unescape: bool
     :return: the list of arguments
     :rtype: list
     """
-    return shlex.split(cmdline)
+    result = shlex.split(cmdline)
+    if unescape:
+        result = unescape_args(result)
+    return result
 
 
-def split_args(args: List[str], handlers: List[str]) -> Dict[str, List[str]]:
+def split_args(args: List[str], handlers: List[str], unescape: bool = False) -> Dict[str, List[str]]:
     """
     Splits the command-line arguments into handler and their associated arguments.
     Special entry "" is used for global options.
@@ -26,6 +61,8 @@ def split_args(args: List[str], handlers: List[str]) -> Dict[str, List[str]]:
     :type args: list
     :param handlers: the list of valid handler names
     :type handlers: list
+    :param unescape: whether to unescape unicode chars
+    :type unescape: bool
     :return: the dictionary for handler index / handler name + options list
     :rtype: dict
     """
@@ -33,6 +70,9 @@ def split_args(args: List[str], handlers: List[str]) -> Dict[str, List[str]]:
     result = dict()
     last_handler = ""
     last_args = []
+
+    if unescape:
+        args = unescape_args(args)
 
     for arg in args:
         if arg in handlers:
@@ -52,7 +92,7 @@ def split_args(args: List[str], handlers: List[str]) -> Dict[str, List[str]]:
     return result
 
 
-def args_to_objects(args: Dict[str, List[str]], valid_plugins: Dict[str, Plugin], allow_global_options: bool = False, allow_unknown_args: bool = False) -> List[Plugin]:
+def args_to_objects(args: Dict[str, List[str]], valid_plugins: Dict[str, Plugin], allow_global_options: bool = False, allow_unknown_args: bool = False, unescape: bool = False) -> List[Plugin]:
     """
     Instantiates the plugins from the parsed arguments dictionary.
 
@@ -64,6 +104,8 @@ def args_to_objects(args: Dict[str, List[str]], valid_plugins: Dict[str, Plugin]
     :type allow_global_options: bool
     :param allow_unknown_args: whether to allow unknown args (eg typos or unknown plugins)
     :type allow_unknown_args: bool
+    :param unescape: whether to unescape unicode chars
+    :type unescape: bool
     :return: the list of instantiated plugins
     :rtype: list
     """
@@ -77,7 +119,10 @@ def args_to_objects(args: Dict[str, List[str]], valid_plugins: Dict[str, Plugin]
 
         name = args[key][0]
         plugin = copy.deepcopy(valid_plugins[name])
-        unknown = plugin.parse_args(args[key][1:])
+        sub_args = args[key][1:]
+        if unescape:
+            sub_args = unescape_args(sub_args)
+        unknown = plugin.parse_args(sub_args)
         if not allow_unknown_args and (len(unknown) > 0):
             raise Exception("Found unknown argument(s) for plugin '%s': %s" % (plugin.name(), str(unknown)))
         result.append(plugin)
