@@ -4,6 +4,13 @@ import inspect
 from typing import Optional, Tuple, List
 
 
+class AnyData:
+    """
+    Dummy class that can be used for matching anything in compatibility tests.
+    """
+    pass
+
+
 def get_class(full_class_name: Optional[str] = None,
               module_name: Optional[str] = None, class_name: Optional[str] = None) -> type:
     """

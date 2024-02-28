@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.1.3 (????-??-??)
+------------------
+
+- added the dummy type `AnyData` which is used by default in the `check_compatibility`
+  method for a *match all* (ie can be used for general purpose plugins)
+
+
 0.1.2 (2024-02-22)
 ------------------
 

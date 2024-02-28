@@ -4,7 +4,7 @@ import sys
 import traceback
 
 from typing import List
-from ._types import classes_to_str, get_class_name
+from ._types import classes_to_str, get_class_name, AnyData
 
 from wai.logging import LOGGING_WARNING, set_logging_level, add_logging_level, add_logger_name
 
@@ -243,13 +243,14 @@ def init_initializable(handler: Initializable, handler_type: str, raise_again: b
         return False
 
 
-def check_compatibility(plugins: List[Plugin]):
+def check_compatibility(plugins: List[Plugin], match_all=AnyData):
     """
     Checks whether the plugins are compatible based on their inputs/outputs.
     Raises an exception if not compatible.
 
     :param plugins: the list of plugins to check
     :type plugins: list
+    :param match_all: the class that always matches
     """
     if len(plugins) == 0:
         return
@@ -265,6 +266,9 @@ def check_compatibility(plugins: List[Plugin]):
             raise Exception(index2 + "/" + plugin2.name() + " is not an InputConsumer!")
         classes1 = plugin1.generates()
         classes2 = plugin2.accepts()
+        #
+        if (match_all in classes1) or (match_all in classes2):
+            return
         compatible = False
         for class1 in classes1:
             if class1 in classes2:
