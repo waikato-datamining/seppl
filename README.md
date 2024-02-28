@@ -1,4 +1,4 @@
-<img align="right" src="img/seppl_logo.png" width="25%"/>
+<img align="right" src="img/seppl_logo.png" width="15%"/>
 
 # seppl
 Simple Entry Point PipeLines (**seppl**). Python library for parsing pipeline 
