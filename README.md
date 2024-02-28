@@ -112,6 +112,10 @@ i.e., a list of plugins, to see whether they are compatible. This method will
 raise an exception if plugins are not implementing the mixins or if there is
 no overlap between the generated/accepted classes.
 
+For general purpose plugins, you can use `AnyData` dummy class in the
+`accepts`/`generates` methods, as this class is used by default as a 
+*match all* by the `check_compatibility` method.
+
 See the plugins in [plugins_comp.py](https://github.com/waikato-datamining/seppl-example/blob/main/src/my/plugins_comp.py)
 and [some example pipeline checks](https://github.com/waikato-datamining/seppl-example/blob/main/src/my/usage/compatibility.py)
 done with them. 
