@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.1.3 (????-??-??)
+0.1.3 (2024-02-29)
 ------------------
 
 - added the dummy type `AnyData` which is used by default in the `check_compatibility`
