@@ -55,6 +55,8 @@ def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writ
                 data = []
                 if session.options.force_batch:
                     for item in reader.read():
+                        if item is None:
+                            continue
                         session.count += 1
                         data.append(item)
                         if session.count % session.options.update_interval == 0:
@@ -64,6 +66,8 @@ def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writ
                         session.logger.info("%d records filtered..." % session.count)
                 else:
                     for item in reader.read():
+                        if item is None:
+                            continue
                         session.count += 1
                         if (filter_ is not None) and (item is not None):
                             item = filter_.process(item)
@@ -79,6 +83,8 @@ def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writ
                 if session.options.force_batch:
                     data = []
                     for item in reader.read():
+                        if item is None:
+                            continue
                         session.count += 1
                         data.append(item)
                         if session.count % session.options.update_interval == 0:
@@ -98,6 +104,8 @@ def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writ
                                 session.logger.info("%d records written..." % count)
                 else:
                     for item in reader.read():
+                        if item is None:
+                            continue
                         session.count += 1
                         if (filter_ is not None) and (item is not None):
                             item = filter_.process(item)

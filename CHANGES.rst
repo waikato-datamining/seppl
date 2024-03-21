@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.1.4 (????-??-??)
+------------------
+
+- the `execute` method no longer counts `None` items returned by the reader
+
+
 0.1.3 (2024-02-29)
 ------------------
 
