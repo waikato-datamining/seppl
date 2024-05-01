@@ -1,10 +1,14 @@
 Changelog
 =========
 
-0.1.4 (????-??-??)
+0.2.0 (????-??-??)
 ------------------
 
 - the `execute` method no longer counts `None` items returned by the reader
+- added the `seppl.ClassListerRegistry` class that offers a more convenient way of
+  discovering classes via a function that returns a dictionary of superclasses and
+  the associated modules to inspect; with this approach only a single entry_point
+  has to be defined in `setup.py`, pointing to the class lister module/function
 
 
 0.1.3 (2024-02-29)

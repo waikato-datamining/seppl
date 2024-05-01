@@ -447,3 +447,5 @@ class Registry:
         if group not in self._plugins:
             self._register(group, c)
         return self._plugins[group]
+
+
