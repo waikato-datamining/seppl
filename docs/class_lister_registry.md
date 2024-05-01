@@ -1,4 +1,4 @@
-# Class lister approach
+# Class lister registry
 
 ## Usage
 
