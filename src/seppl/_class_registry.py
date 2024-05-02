@@ -405,7 +405,10 @@ class ClassListerRegistry:
 
         # register from class listers as well?
         if (len(all_classes) == 0) or ((self._custom_class_listers is not None) and (len(self._custom_class_listers) > 0)) or self.has_env_class_listers():
-            all_classes.update(self._determine_from_class_listers(c, self.actual_fallback_class_listers()))
+            actual = self.actual_fallback_class_listers()
+            for excl in self.actual_excluded_class_listers():
+                actual.remove(excl)
+            all_classes.update(self._determine_from_class_listers(c, actual))
 
         self._classes[c] = sorted(list(all_classes))
 

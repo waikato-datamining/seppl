@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.2.1 (2024-05-01)
+------------------
+
+- `ClassListerRegistry` now removes any excluded class listers before locating the classes
+
+
 0.2.0 (2024-05-01)
 ------------------
 
