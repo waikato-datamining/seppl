@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.2.3 (????-??-??)
+------------------
+
+- `_determine_from_entry_points` method of `ClassListerRegistry` class now checks whether
+  there the attributes tuple has any elements (i.e., whether the optional `:function_name`
+  was provided)
+- message `X records processed in total` now only output at the end
+
+
 0.2.2 (2024-05-02)
 ------------------
 

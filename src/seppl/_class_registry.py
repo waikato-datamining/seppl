@@ -363,8 +363,12 @@ class ClassListerRegistry:
         result = []
         class_listers = []
         for item in working_set.iter_entry_points("class_lister", None):
-            # format: "name=module:function",
-            class_listers.append(item.module_name + ":" + item.attrs[0])
+            if len(item.attrs) > 0:
+                # format: "name=module:function"
+                class_listers.append(item.module_name + ":" + item.attrs[0])
+            else:
+                # format: "name=module"
+                class_listers.append(item.module_name)
         if len(class_listers) > 0:
             result = self._determine_from_class_listers(c, class_listers)
         return result

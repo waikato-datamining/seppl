@@ -78,7 +78,6 @@ def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writ
                         if session.count % session.options.update_interval == 0:
                             session.logger.info("%d records processed..." % session.count)
                 writer.write_batch(data)
-                session.logger.info("%d records processed in total." % session.count)
             elif isinstance(writer, StreamWriter) or (writer is None):
                 if session.options.force_batch:
                     data = []
@@ -114,9 +113,9 @@ def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writ
                                 writer.write_stream(item)
                         if session.count % session.options.update_interval == 0:
                             session.logger.info("%d records processed..." % session.count)
-                session.logger.info("%d records processed in total." % session.count)
             else:
                 raise Exception("Neither BatchWriter nor StreamWriter!")
+        session.logger.info("%d records processed in total." % session.count)
     except:
         traceback.print_exc()
 
