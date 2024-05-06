@@ -323,14 +323,20 @@ class ClassListerRegistry:
         result = []
 
         if len(class_listers) > 0:
-            try:
-                cls = get_class(c)
-            except:
-                print("Failed to instantiate class: %s" % c, file=sys.stderr)
-                traceback.print_exc()
-                return result
+            cls = None
 
             for class_lister in class_listers:
+                if class_lister == "":
+                    continue
+
+                if cls is None:
+                    try:
+                        cls = get_class(c)
+                    except:
+                        print("Failed to instantiate class: %s" % c, file=sys.stderr)
+                        traceback.print_exc()
+                        return result
+
                 try:
                     func = get_class_lister(class_lister)
                 except:
@@ -385,7 +391,8 @@ class ClassListerRegistry:
         result = []
 
         if os.getenv(self.env_class_listers) is not None:
-            # format: "module:function,module:function,...",
+            # format: "classlister1,classlister2,..."
+            # classlister format: "module_name:function_name" or "module_name" if "list_classes" as method
             class_listers = os.getenv(self.env_class_listers).split(",")
             result = self._determine_from_class_listers(c, class_listers)
 
@@ -410,10 +417,14 @@ class ClassListerRegistry:
         # register from class listers as well?
         if (len(all_classes) == 0) or ((self._custom_class_listers is not None) and (len(self._custom_class_listers) > 0)) or self.has_env_class_listers():
             actual = self.actual_fallback_class_listers()
-            for excl in self.actual_excluded_class_listers():
-                if excl in actual:
-                    actual.remove(excl)
             all_classes.update(self._determine_from_class_listers(c, actual))
+
+        # excluded classes?
+        excluded_listers = self.actual_excluded_class_listers()
+        excluded_classes = self._determine_from_class_listers(c, excluded_listers)
+        for cls in excluded_classes:
+            if cls in all_classes:
+                all_classes.remove(cls)
 
         self._classes[c] = sorted(list(all_classes))
 

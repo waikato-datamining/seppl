@@ -1,7 +1,13 @@
 Changelog
 =========
 
-0.2.3 (2024-05-3)
+0.2.4 (2024-05-06)
+------------------
+
+- reworked excluding of classes
+
+
+0.2.3 (2024-05-03)
 ------------------
 
 - `_determine_from_entry_points` method of `ClassListerRegistry` class now checks whether

@@ -30,7 +30,7 @@ setup(
         '': 'src'
     },
     packages=find_namespace_packages(where='src'),
-    version="0.2.3",
+    version="0.2.4",
     author='Peter Reutemann',
     author_email='fracpete@waikato.ac.nz',
     entry_points={
