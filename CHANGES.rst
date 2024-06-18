@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.2.5 (2024-06-18)
+------------------
+
+- the `seppl.io.locate_files` method can take a default glob now, which gets appended
+  to inputs that point to directories
+
+
 0.2.4 (2024-05-06)
 ------------------
 
