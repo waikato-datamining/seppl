@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.2.6 (2024-07-01)
+------------------
+
+- reworked the `execute` method, properly distinguishing between stream/batch mode now
+
+
 0.2.5 (2024-06-18)
 ------------------
 
