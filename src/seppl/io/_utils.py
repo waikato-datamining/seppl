@@ -5,7 +5,7 @@ from typing import Union, List
 
 
 def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str]] = None,
-                 fail_if_empty: bool = False, default_glob: str = None) -> List[str]:
+                 recursive: bool = False, fail_if_empty: bool = False, default_glob: str = None) -> List[str]:
     """
     Locates all the files from the specified inputs, which may contain globs.
     glob results get sorted to ensure the same file order each time.
@@ -16,6 +16,8 @@ def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str
     :type inputs: str or list
     :param input_lists: text file(s) that list the actual input files to use
     :type input_lists: str or list
+    :param recursive: for supporting recursive globs
+    :type recursive: bool
     :param fail_if_empty: whether to throw an exception if no files were located
     :type fail_if_empty: bool
     :param default_glob: the default glob to use, ignored if None
@@ -52,7 +54,7 @@ def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str
     # globs
     if inputs is not None:
         for inp in inputs:
-            for f in sorted(glob.glob(inp)):
+            for f in sorted(glob.glob(inp, recursive=recursive)):
                 if os.path.isdir(f):
                     continue
                 result.append(f)

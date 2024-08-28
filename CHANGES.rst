@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.2.7 (????-??-??)
+------------------
+
+- the `seppl.io.locate_files` method can support recursive globs now (default is no)
+
+
 0.2.6 (2024-07-01)
 ------------------
 
