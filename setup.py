@@ -30,6 +30,9 @@ setup(
         '': 'src'
     },
     packages=find_namespace_packages(where='src'),
+    install_requires=[
+        "setuptools",
+    ],
     version="0.2.7",
     author='Peter Reutemann',
     author_email='fracpete@waikato.ac.nz',
