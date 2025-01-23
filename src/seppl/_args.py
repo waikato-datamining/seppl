@@ -1,7 +1,7 @@
 import copy
 import shlex
 
-from typing import List, Dict, Tuple, Iterable
+from typing import List, Dict, Tuple, Iterable, Set, Optional
 from ._plugin import Plugin
 
 
@@ -51,6 +51,30 @@ def split_cmdline(cmdline: str, unescape: bool = False) -> List[str]:
         result = unescape_args(result)
     return result
 
+def resolve_handler(search: str, handlers: Set[str]) -> Optional[str]:
+    """
+    Tries to find the "search" string among the handlers, exact and partial match.
+
+    :param search: the potential handler to find
+    :type search: str
+    :param handlers: the set of valid handlers to match against
+    :type handlers: set
+    :return: the match or None if failed to find
+    :rtype: str or None
+    """
+    # exact match?
+    if search in handlers:
+        return search
+    # unique partial match?
+    matches = []
+    for handler in handlers:
+        if handler.startswith(search):
+            matches.append(handler)
+    if len(matches) == 1:
+        return matches[0]
+    # nothing found
+    return None
+
 
 def split_args(args: List[str], handlers: List[str], unescape: bool = False) -> Dict[str, List[str]]:
     """
@@ -66,7 +90,7 @@ def split_args(args: List[str], handlers: List[str], unescape: bool = False) -> 
     :return: the dictionary for handler index / handler name + options list
     :rtype: dict
     """
-    handlers = set(handlers)
+    handlers_set = set(handlers)
     result = dict()
     last_handler = ""
     last_args = []
@@ -75,13 +99,14 @@ def split_args(args: List[str], handlers: List[str], unescape: bool = False) -> 
         args = unescape_args(args)
 
     for arg in args:
-        if arg in handlers:
+        handler = resolve_handler(arg, handlers_set)
+        if handler is not None:
             if len(last_handler) > 0:
                 result[str(len(result))] = last_args
             else:
                 result[""] = last_args
-            last_handler = arg
-            last_args = [arg]
+            last_handler = handler
+            last_args = [handler]
             continue
         else:
             last_args.append(arg)
