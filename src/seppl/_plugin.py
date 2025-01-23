@@ -88,6 +88,61 @@ class Plugin:
         return self._create_argparser().format_help()
 
 
+class AliasSupporter(object):
+    """
+    Mixin for classes that support alias names.
+    """
+
+    def aliases(self) -> List[str]:
+        """
+        Returns the aliases under which the plugin is known under/available as well.
+
+        :return: the aliases
+        :rtype: list
+        """
+        return []
+
+
+def has_aliases(o) -> bool:
+    """
+    Checks whether the object has any aliases.
+
+    :param o: the object to check
+    :return: True if at least one alias defined
+    """
+    return len(get_aliases(o)) > 0
+
+
+def get_aliases(o) -> List[str]:
+    """
+    Returns the aliases of the object, if it implements AliasSupporter.
+
+    :param o: the object to get the aliases for
+    :return: the list of aliases
+    :rtype: list
+    """
+    result = []
+    if isinstance(o, AliasSupporter):
+        aliases = o.aliases()
+        if aliases is not None:
+            result.extend(aliases)
+    return result
+
+
+def get_all_names(o: Plugin) -> List[str]:
+    """
+    Returns all the names for the plugin, including any aliases.
+
+    :param o: the plugin to get the names for
+    :type o: Plugin
+    :return: the list of aliases
+    :rtype: list
+    """
+    result = [o.name()]
+    result.extend(get_aliases(o))
+    return result
+
+
 class LoggingHandler(object):
     """
     Mixin for classes that support logging

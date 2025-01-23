@@ -1,7 +1,7 @@
 import os
 from typing import List
 
-from ._plugin import Plugin
+from ._plugin import Plugin, get_aliases
 
 HELP_FORMAT_TEXT = "text"
 HELP_FORMAT_MARKDOWN = "markdown"
@@ -25,17 +25,22 @@ def generate_plugin_usage(plugin: Plugin, help_format: str = HELP_FORMAT_TEXT, h
     if help_format not in HELP_FORMATS:
         raise Exception("Unhandled help format: %s" % help_format)
 
+    aliases = get_aliases(plugin)
     result = ""
     if help_format == HELP_FORMAT_TEXT:
         result += "\n" + plugin.name() + "\n" + "=" * len(plugin.name()) + "\n"
         result = result.strip()
         result += "\n\n"
+        if len(aliases) > 0:
+            result += "Alias(es): %s\n\n" % ", ".join(aliases)
         result += plugin.format_help() + "\n"
     elif help_format == HELP_FORMAT_MARKDOWN:
         result += "#"*heading_level + " " + plugin.name() + "\n"
         result += "\n"
         result = result.strip()
         result += "\n\n"
+        if len(aliases) > 0:
+            result += "Alias(es): %s\n\n" % ", ".join(aliases)
         result += plugin.description() + "\n"
         result += "\n"
         result += "```\n"

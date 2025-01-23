@@ -8,7 +8,7 @@ from typing import Callable, Union, List, Optional, Type, Dict
 from pkg_resources import working_set
 
 from ._types import get_class_name, get_class
-from ._plugin import Plugin
+from ._plugin import Plugin, get_all_names
 
 DEFAULT = "DEFAULT"
 """ the placeholder for the default class listers in the environment variable. """
@@ -448,7 +448,9 @@ class ClassListerRegistry:
                 try:
                     cls = get_class(cname)
                     plugin = cls()
-                    result[plugin.name()] = plugin
+                    names = get_all_names(plugin)
+                    for name in names:
+                        result[name] = plugin
                 except NotImplementedError:
                     pass
                 except:

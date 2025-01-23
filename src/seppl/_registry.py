@@ -7,7 +7,7 @@ import traceback
 from typing import List, Union, Optional, Dict
 from pkg_resources import working_set
 
-from ._plugin import Plugin
+from ._plugin import get_all_names, Plugin
 from ._types import get_class, get_class_name
 
 
@@ -320,13 +320,17 @@ class Registry:
         """
         if self.is_excluded(o):
             return False
-        if self.enforce_uniqueness and (o.name() in self._all_plugins):
-            if get_class_name(self._all_plugins[o.name()]) != get_class_name(o):
-                raise Exception("Duplicate plugin name encountered: name=%s, existing type=%s, new type=%s)"
-                                % (o.name(), str(type(self._all_plugins[o.name()])), str(type(o))))
+        names = get_all_names(o)
+        present = any([x in self._all_plugins for x in names])
+        if self.enforce_uniqueness and present:
+            for name in names:
+                if get_class_name(self._all_plugins[name]) != get_class_name(o):
+                    raise Exception("Duplicate plugin name encountered: name=%s, existing type=%s, new type=%s)"
+                                    % (name, str(type(self._all_plugins[name])), str(type(o))))
         else:
-            self._all_plugins[o.name()] = o
-            d[o.name()] = o
+            for name in names:
+                self._all_plugins[name] = o
+                d[name] = o
         return True
 
     def _init_plugin_class(self, c):
@@ -363,7 +367,9 @@ class Registry:
                 try:
                     p = att()
                     if self._register_plugin(result, p):
-                        result[p.name()] = p
+                        names = get_all_names(p)
+                        for name in names:
+                            result[name] = p
                 except NotImplementedError:
                     pass
                 except:
@@ -405,7 +411,9 @@ class Registry:
                 if issubclass(cls, c):
                     p = cls()
                     if self._register_plugin(result, p):
-                        result[p.name()] = p
+                        names = get_all_names(p)
+                        for name in names:
+                            result[name] = p
             # format: "unique_string=plugin_module:superclass_name",
             elif self.mode == MODE_DYNAMIC:
                 c = get_class(full_class_name=".".join(item.attrs))

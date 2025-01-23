@@ -5,6 +5,7 @@ Changelog
 ------------------
 
 - added support for using partial handler/plugin names (as long as they are unique)
+- added experimental support for aliases with `AliasSupporter` mixin
 
 
 0.2.8 (2024-12-20)
