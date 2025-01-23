@@ -58,6 +58,14 @@ the following two methods:
   transfer the parsed options into member variables of your plugin 
 
 
+### Aliases
+
+If you want to have the ability to allow shorthand names for your plugins as well,
+then you can do that by using the `seppl.AliasSupporter` mixin. The plugins will
+simply be added under their aliases to the class registry as well (inflating the 
+number of *available* plugins).
+
+
 ### Compatibility
 
 If you want to enable checks between pipeline components, then your plugins
