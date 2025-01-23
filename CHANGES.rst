@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.2.9 (????-??-??)
+------------------
+
+- added support for using partial handler/plugin names (as long as they are unique)
+
+
 0.2.8 (2024-12-20)
 ------------------
 
