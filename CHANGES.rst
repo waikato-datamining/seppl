@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.2.10 (????-??-??)
+0.2.10 (2025-02-11)
 -------------------
 
 - added alias support to the `ClassRegistry` class
