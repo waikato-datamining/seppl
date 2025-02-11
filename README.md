@@ -65,6 +65,20 @@ then you can do that by using the `seppl.AliasSupporter` mixin. The plugins will
 simply be added under their aliases to the class registry as well (inflating the 
 number of *available* plugins).
 
+The following low-level methods are available for aliases:
+
+* `has_aliases` - checks whether a plugin has any aliases
+* `get_aliases` - retrieves any aliases and simply returns an empty list if not an `AliasSupporter`
+
+The `Registry` and `ClassRegistry` classes have the following methods/properties 
+to aid in the handling of aliases:
+
+* `is_alias(str)` - checks whether a plugin is an alias
+* `all_alias` - returns a sorted list of all known aliases
+
+**NB:** Due to the dynamic instantiation that `ClassRegistry` uses, the aliases
+are only being populated after appropriate calls to the `plugin(...)` method.
+
 
 ### Compatibility
 
