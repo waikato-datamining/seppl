@@ -182,12 +182,16 @@ def is_help_requested(args: List[str]) -> Tuple[bool, bool, str]:
     return help_requested, plugin_details, plugin_name
 
 
-def enumerate_plugins(plugins: Iterable[str], prefix: str = "", width: int = 72) -> str:
+def enumerate_plugins(plugins: Iterable[str], aliases: List[str] = None, alias_flag: str = "*", prefix: str = "", width: int = 72) -> str:
     """
     Turns the list of plugin names into a string.
 
     :param plugins: the plugin names to turn into a string
     :type plugins: Iterable
+    :param aliases: the list of known aliases (for flagging them in the generated list)
+    :type aliases: list
+    :param alias_flag: the string to use for identifying aliases
+    :type alias_flag: str
     :param prefix: the prefix string to use for each line
     :type prefix: str
     :param width: the maximum width of the string before adding a newline
@@ -205,6 +209,10 @@ def enumerate_plugins(plugins: Iterable[str], prefix: str = "", width: int = 72)
             line = prefix + plugin
         else:
             line += plugin
+        if aliases is not None:
+            if plugin in aliases:
+                line += alias_flag
+
     if len(line) > 0:
         result.append(line)
     return "\n".join(result)

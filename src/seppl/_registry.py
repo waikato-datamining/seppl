@@ -7,7 +7,7 @@ import traceback
 from typing import List, Union, Optional, Dict
 from pkg_resources import working_set
 
-from ._plugin import get_all_names, Plugin
+from ._plugin import get_all_names, get_aliases, Plugin
 from ._types import get_class, get_class_name
 
 
@@ -101,6 +101,7 @@ class Registry:
 
         self._plugins = dict()
         self._all_plugins = dict()
+        self._all_aliases = set()
         self._custom_modules = None
         self._default_modules = None
         self._env_modules = None
@@ -306,6 +307,27 @@ class Registry:
                 break
         return result
 
+    def is_alias(self, name: str) -> bool:
+        """
+        Checks whether the plugin name is an alias.
+
+        :param name: the plugin name to check
+        :type name: str
+        :return: True if an alias
+        :rtype: bool
+        """
+        return name in self._all_aliases
+
+    @property
+    def all_aliases(self) -> List[str]:
+        """
+        Returns a sorted list of all known aliases.
+
+        :return: the list of all known aliases
+        :rtype: list
+        """
+        return sorted(list(self._all_aliases))
+
     def _register_plugin(self, d: Dict[str, Plugin], o: Plugin) -> bool:
         """
         Adds the plugin to the registry dictionary under its name.
@@ -331,6 +353,10 @@ class Registry:
             for name in names:
                 self._all_plugins[name] = o
                 d[name] = o
+
+        # record aliases
+        self._all_aliases.update(get_aliases(o))
+
         return True
 
     def _init_plugin_class(self, c):
@@ -370,6 +396,8 @@ class Registry:
                         names = get_all_names(p)
                         for name in names:
                             result[name] = p
+                        # record aliases
+                        self._all_aliases.update(get_aliases(p))
                 except NotImplementedError:
                     pass
                 except:
@@ -414,6 +442,8 @@ class Registry:
                         names = get_all_names(p)
                         for name in names:
                             result[name] = p
+                        # record aliases
+                        self._all_aliases.update(get_aliases(p))
             # format: "unique_string=plugin_module:superclass_name",
             elif self.mode == MODE_DYNAMIC:
                 c = get_class(full_class_name=".".join(item.attrs))

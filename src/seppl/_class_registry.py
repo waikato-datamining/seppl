@@ -8,7 +8,7 @@ from typing import Callable, Union, List, Optional, Type, Dict
 from pkg_resources import working_set
 
 from ._types import get_class_name, get_class
-from ._plugin import Plugin, get_all_names
+from ._plugin import Plugin, get_all_names, get_aliases
 
 DEFAULT = "DEFAULT"
 """ the placeholder for the default class listers in the environment variable. """
@@ -68,6 +68,7 @@ class ClassListerRegistry:
         """
 
         self._classes = dict()
+        self._all_aliases = set()
         self._default_class_listers = None
         self._env_class_listers = None
         self._excluded_class_listers = None
@@ -428,6 +429,7 @@ class ClassListerRegistry:
 
         self._classes[c] = sorted(list(all_classes))
 
+
     def plugins(self, c: Union[str, Type], fail_if_empty: bool = True) -> Dict[str, Plugin]:
         """
         Returns the classes for the specified superclass.
@@ -451,6 +453,8 @@ class ClassListerRegistry:
                     names = get_all_names(plugin)
                     for name in names:
                         result[name] = plugin
+                        # record any aliases
+                        self._all_aliases.update(get_aliases(plugin))
                 except NotImplementedError:
                     pass
                 except:
@@ -459,3 +463,26 @@ class ClassListerRegistry:
         if fail_if_empty and (len(result) == 0):
             raise Exception("No classes found for: %s" % c)
         return result
+
+    @property
+    def all_aliases(self) -> List[str]:
+        """
+        Returns a sorted list of all known aliases.
+        Due to dynamic instantiation the call to all_aliases must come after the relevant plugins(...) call.
+
+        :return: the list of all known aliases
+        :rtype: list
+        """
+        return sorted(list(self._all_aliases))
+
+    def is_alias(self, name: str) -> bool:
+        """
+        Checks whether the plugin name is an alias.
+        Due to dynamic instantiation the call to is_alias(...) must come after the relevant plugins(...) call.
+
+        :param name: the plugin name to check
+        :type name: str
+        :return: True if an alias
+        :rtype: bool
+        """
+        return name in self._all_aliases
