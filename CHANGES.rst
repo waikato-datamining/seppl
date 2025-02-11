@@ -6,7 +6,7 @@ Changelog
 
 - added alias support to the `ClassRegistry` class
 - added method `is_alias(...)` and property `all_aliases` to the `Registry` and `ClassRegistry` classes
-- extended the `enumerate_plugins` method to allow flagging of aliases (default: *)
+- extended the `enumerate_plugins` method to allow flagging of aliases (default: `*`)
 
 
 0.2.9 (2025-01-24)
