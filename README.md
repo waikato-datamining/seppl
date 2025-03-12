@@ -117,6 +117,61 @@ to make them copyable into remote ssh sessions:
 * `seppl.unescape_args`
 
 
+### Placeholders
+
+seppl offers basic support for placeholders in files and directories. If a 
+plugin makes use of placeholders, it should import the relevant indicator
+mixin as the help screen generation outputs placeholder information at the
+bottom of the screen. The following mixins are available:
+
+* `seppl.PlaceholderSupporter` - for placeholders that don't rely on the current input, typically *readers*
+* `seppl.InputBasedPlaceholderSupporter` - also supports placeholders that make use of the current input, typically *filters* and *writers*
+
+When defining argparse options, you can use the `placeholder_list(...)` 
+method to append a short list of available placeholders, e.g.:
+
+```python
+from seppl import placeholder_list
+...
+parser.add_argument("-i", "--input", type=str, required=False, nargs="*", 
+                    help="Path to the file(s) to read; glob syntax is supported; " + placeholder_list(obj=self))
+```
+
+The `seppl.io.locate_files` method automatically expands placeholders that do 
+not require the current input.
+
+For expanding placeholders at runtime, you can use the `expand_placeholders`
+method of the session object of the plugin, which automatically includes
+the current input as part of the expansion. 
+
+For example, for an output file of a writer, the call would typically look 
+like this:
+
+```python
+output_file = self.session.expand_placeholders(self.output_file)
+```
+
+You can call the expansion also explicitly using the `seppl.expand_placeholders`
+method:
+
+```python
+from  seppl import expand_placeholders
+...
+s1 = expand_placeholders("{HOME}")
+s2 = expand_placeholders("{CWD}/output/{INPUT_NAMEEXT}", current_input="/some/where/myfile.txt") 
+```
+
+It is possible to expand the built-in placeholders using two approaches:
+
+* `seppl.add_placeholder` method - adds a new the placeholder alongside its 
+  description and lambda for generating a result from an optional input file.
+  Useful for frameworks that make use of seppl.
+  These placeholders will show in help screens and option lists.
+* `seppl.load_user_defined_placeholders` method - loads static placeholders
+  from a text file (format: key=value). Useful for placeholders specific to 
+  users/environments. These placeholders won't show up in help screens and option lists. 
+
+
 ### Tools
 
 The following command-line tools are available:

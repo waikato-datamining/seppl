@@ -36,7 +36,7 @@ def generate_plugin_usage(plugin: Plugin, help_format: str = HELP_FORMAT_TEXT, h
             result += "Alias(es): %s\n\n" % ", ".join(aliases)
         result += plugin.format_help() + "\n"
         if isinstance(plugin, PlaceholderSupporter):
-            result += "\n" + placeholder_help(short=False, markdown=False) + "\n"
+            result += "\n" + placeholder_help(markdown=False, obj=plugin) + "\n"
     elif help_format == HELP_FORMAT_MARKDOWN:
         result += "#"*heading_level + " " + plugin.name() + "\n"
         result += "\n"
@@ -50,7 +50,7 @@ def generate_plugin_usage(plugin: Plugin, help_format: str = HELP_FORMAT_TEXT, h
         result += plugin.format_help()
         result += "```\n"
         if isinstance(plugin, PlaceholderSupporter):
-            result += "\n" + placeholder_help(short=False, markdown=True) + "\n"
+            result += "\n" + placeholder_help(markdown=True, obj=plugin) + "\n"
     else:
         raise Exception("Unhandled help format: %s" % help_format)
 

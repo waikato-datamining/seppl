@@ -2,6 +2,7 @@ import glob
 import os
 
 from typing import Union, List
+from seppl import expand_placeholders
 
 
 def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str]] = None,
@@ -10,7 +11,8 @@ def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str
     Locates all the files from the specified inputs, which may contain globs.
     glob results get sorted to ensure the same file order each time.
     If default_glob is not None and the inputs are pointing to directories, then default_glob
-    gets appended.
+    gets appended. Automatically expands placeholders that are not input-based, including
+    inside the input list text files.
 
     :param inputs: the input path(s) with optional globs
     :type inputs: str or list
@@ -36,6 +38,9 @@ def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str
         else:
             raise Exception("Invalid inputs, must be string(s)!")
 
+        # expand placeholders
+        inputs = [expand_placeholders(x) for x in inputs]
+
         if default_glob is not None:
             for i, inp in enumerate(inputs):
                 if os.path.isdir(inp):
@@ -48,6 +53,9 @@ def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str
             input_lists = input_lists
         else:
             raise Exception("Invalid input lists, must be string(s)!")
+
+        # expand placeholders
+        input_lists = [expand_placeholders(x) for x in input_lists]
 
     result = []
 
@@ -69,8 +77,10 @@ def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str
                 print("WARNING: Input list points to directory: %s" % inp)
                 continue
             with open(inp, "r") as fp:
-                lines = [x.strip() for x in fp.readlines()]
+                lines = [expand_placeholders(x.strip()) for x in fp.readlines()]
             for line in lines:
+                if len(line) == 0:
+                    continue
                 if not os.path.exists(line):
                     print("WARNING: Path from input list '%s' does not exist: %s" % (inp, line))
                     continue

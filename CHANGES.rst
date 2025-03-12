@@ -6,7 +6,11 @@ Changelog
 
 - added support for placeholders, which can be expanded via the `Session` object
 - plugins supporting placeholders should import the `PlaceholderSupporter` indicator
-  mixin for automatically adding help on placeholders to the help screen
+  mixin for automatically adding help on placeholders to the help screen; plugins
+  that support placeholders based on the current input should import the
+  `InputBasedPlaceholderSupporter` indicator mixin
+- placeholder-supporting plugins can use the `placeholder_list` method in their argparse options
+- the `load_user_defined_placeholders` method allows incorporating custom placeholders for directories
 
 
 0.2.10 (2025-02-11)

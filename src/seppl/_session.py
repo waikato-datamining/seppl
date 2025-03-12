@@ -58,7 +58,7 @@ class Session:
         :return: the expanded string
         :rtype: str
         """
-        return expand_placeholders(self.current_input, template)
+        return expand_placeholders(template, current_input=self.current_input)
 
 
 class SessionHandler(object):
