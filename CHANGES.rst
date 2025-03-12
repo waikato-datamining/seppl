@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.2.11 (????-??-??)
+0.2.11 (2025-03-13)
 -------------------
 
 - added support for placeholders, which can be expanded via the `Session` object
