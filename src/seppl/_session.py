@@ -1,9 +1,10 @@
 import argparse
 import logging
-
 from dataclasses import dataclass
 
 from wai.logging import set_logging_level
+
+from ._placeholders import expand_placeholders
 
 
 @dataclass
@@ -47,6 +48,17 @@ class Session:
         self._add_option("logging_level", level)
         set_logging_level(self.logger, level)
         return self
+
+    def expand_placeholders(self, template: str) -> str:
+        """
+        Expands the placeholder in the template using the current input.
+
+        :param template: the template to expand
+        :type template: str
+        :return: the expanded string
+        :rtype: str
+        """
+        return expand_placeholders(self.current_input, template)
 
 
 class SessionHandler(object):

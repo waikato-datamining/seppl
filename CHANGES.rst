@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.2.11 (????-??-??)
+-------------------
+
+- added support for placeholders, which can be expanded via the `Session` object
+- plugins supporting placeholders should import the `PlaceholderSupporter` indicator
+  mixin for automatically adding help on placeholders to the help screen
+
+
 0.2.10 (2025-02-11)
 -------------------
 
