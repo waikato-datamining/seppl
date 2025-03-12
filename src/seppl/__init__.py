@@ -9,4 +9,4 @@ from ._help import generate_plugin_usage, generate_help, HELP_FORMATS, HELP_FORM
 from ._types import get_class, get_class_name, classes_to_str, AnyData
 from ._metadata import MetaDataHandler, add_metadata, get_metadata
 from ._session import Session, SessionHandler
-from ._placeholders import expand_placeholders, placeholder_help, PLACEHOLDERS, PLACEHOLDERS_HELP, PlaceholderSupporter
+from ._placeholders import expand_placeholders, placeholder_help, PLACEHOLDERS, PLACEHOLDERS_HELP, PlaceholderSupporter, add_placeholder

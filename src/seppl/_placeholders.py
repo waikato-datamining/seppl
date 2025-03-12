@@ -24,6 +24,20 @@ PLACEHOLDERS_HELP = {
 }
 
 
+def add_placeholder(placeholder: str, description: str):
+    """
+    Allows adding a custom placeholder.
+
+    :param placeholder: the placeholder itself, including {}
+    :type placeholder: str
+    :param description: the description for the placeholder, used in the placeholder_help() method
+    :type description: str
+    """
+    if placeholder not in PLACEHOLDERS:
+        PLACEHOLDERS.append(placeholder)
+    PLACEHOLDERS_HELP[placeholder] = description
+
+
 def expand_placeholders(current_input: str, template: str) -> str:
     """
     Expands the placeholder in the template using the current input.
