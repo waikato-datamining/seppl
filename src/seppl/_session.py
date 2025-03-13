@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from wai.logging import set_logging_level
 
-from ._placeholders import expand_placeholders
+from .placeholders import expand_placeholders
 
 
 @dataclass

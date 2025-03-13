@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.2.12 (2025-03-13)
+-------------------
+
+- moved placeholder functionality from `seppl` to `seppl.placeholders`
+- `load_user_defined_placeholders` now ignores lines that start with #
+
+
 0.2.11 (2025-03-13)
 -------------------
 

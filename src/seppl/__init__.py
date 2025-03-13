@@ -9,5 +9,3 @@ from ._help import generate_plugin_usage, generate_help, HELP_FORMATS, HELP_FORM
 from ._types import get_class, get_class_name, classes_to_str, AnyData
 from ._metadata import MetaDataHandler, add_metadata, get_metadata
 from ._session import Session, SessionHandler
-from ._placeholders import PlaceholderSupporter, InputBasedPlaceholderSupporter
-from ._placeholders import expand_placeholders, placeholder_list, placeholder_help, add_placeholder, load_user_defined_placeholders

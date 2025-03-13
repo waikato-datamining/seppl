@@ -190,7 +190,7 @@ def load_user_defined_placeholders(path: str):
     """
     Loads placeholders from the specified text file (format: key=value) that are not input-based.
     With "key" being the name of the placeholder without the curly brackets and value the path
-    that it represents.
+    that it represents. Ignores empty lines or lines that start with '#' or ';'.
 
     :param path: the file with the placeholders to load
     :type path: str
@@ -200,6 +200,8 @@ def load_user_defined_placeholders(path: str):
     for line in lines:
         line = line.strip()
         if len(line) == 0:
+            continue
+        if line.startswith("#"):
             continue
         parts = line.split("=")
         if len(parts) == 2:

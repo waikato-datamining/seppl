@@ -2,7 +2,7 @@ import os
 from typing import List
 
 from ._plugin import Plugin, get_aliases
-from ._placeholders import PlaceholderSupporter, placeholder_help
+from .placeholders import PlaceholderSupporter, placeholder_help
 
 HELP_FORMAT_TEXT = "text"
 HELP_FORMAT_MARKDOWN = "markdown"

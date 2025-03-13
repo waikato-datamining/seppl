@@ -124,14 +124,14 @@ plugin makes use of placeholders, it should import the relevant indicator
 mixin as the help screen generation outputs placeholder information at the
 bottom of the screen. The following mixins are available:
 
-* `seppl.PlaceholderSupporter` - for placeholders that don't rely on the current input, typically *readers*
-* `seppl.InputBasedPlaceholderSupporter` - also supports placeholders that make use of the current input, typically *filters* and *writers*
+* `seppl.placeholders.PlaceholderSupporter` - for placeholders that don't rely on the current input, typically *readers*
+* `seppl.placeholders.InputBasedPlaceholderSupporter` - also supports placeholders that make use of the current input, typically *filters* and *writers*
 
 When defining argparse options, you can use the `placeholder_list(...)` 
 method to append a short list of available placeholders, e.g.:
 
 ```python
-from seppl import placeholder_list
+from seppl.placeholders import placeholder_list
 ...
 parser.add_argument("-i", "--input", type=str, required=False, nargs="*", 
                     help="Path to the file(s) to read; glob syntax is supported; " + placeholder_list(obj=self))
@@ -151,11 +151,11 @@ like this:
 output_file = self.session.expand_placeholders(self.output_file)
 ```
 
-You can call the expansion also explicitly using the `seppl.expand_placeholders`
+You can call the expansion also explicitly using the `seppl.placeholders.expand_placeholders`
 method:
 
 ```python
-from  seppl import expand_placeholders
+from  seppl.placeholders import expand_placeholders
 ...
 s1 = expand_placeholders("{HOME}")
 s2 = expand_placeholders("{CWD}/output/{INPUT_NAMEEXT}", current_input="/some/where/myfile.txt") 
@@ -163,11 +163,11 @@ s2 = expand_placeholders("{CWD}/output/{INPUT_NAMEEXT}", current_input="/some/wh
 
 It is possible to expand the built-in placeholders using two approaches:
 
-* `seppl.add_placeholder` method - adds a new the placeholder alongside its 
+* `seppl.placeholders.add_placeholder` method - adds a new the placeholder alongside its 
   description and lambda for generating a result from an optional input file.
   Useful for frameworks that make use of seppl.
   These placeholders will show in help screens and option lists.
-* `seppl.load_user_defined_placeholders` method - loads static placeholders
+* `seppl.placeholders.load_user_defined_placeholders` method - loads static placeholders
   from a text file (format: key=value). Useful for placeholders specific to 
   users/environments. These placeholders won't show up in help screens and option lists. 
 

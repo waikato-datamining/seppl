@@ -2,7 +2,7 @@ import glob
 import os
 
 from typing import Union, List
-from seppl import expand_placeholders
+from seppl.placeholders import expand_placeholders
 
 
 def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str]] = None,
