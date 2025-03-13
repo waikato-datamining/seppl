@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.2.13 (2025-03-14)
+-------------------
+
+- the `resolve_handler` and `split_args` methods now have the `partial` boolean
+  parameter which determines whether partial matches are accepted or not; off
+  by default as it can interfere with parameters from plugins
+
+
 0.2.12 (2025-03-13)
 -------------------
 

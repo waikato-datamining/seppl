@@ -51,7 +51,7 @@ def split_cmdline(cmdline: str, unescape: bool = False) -> List[str]:
         result = unescape_args(result)
     return result
 
-def resolve_handler(search: str, handlers: Set[str]) -> Optional[str]:
+def resolve_handler(search: str, handlers: Set[str], partial: bool = False) -> Optional[str]:
     """
     Tries to find the "search" string among the handlers, exact and partial match.
 
@@ -59,24 +59,29 @@ def resolve_handler(search: str, handlers: Set[str]) -> Optional[str]:
     :type search: str
     :param handlers: the set of valid handlers to match against
     :type handlers: set
+    :param partial: whether to allow partial matches
+    :type partial: bool
     :return: the match or None if failed to find
     :rtype: str or None
     """
     # exact match?
     if search in handlers:
         return search
-    # unique partial match?
-    matches = []
-    for handler in handlers:
-        if handler.startswith(search):
-            matches.append(handler)
-    if len(matches) == 1:
-        return matches[0]
+
+    if partial:
+        # unique partial match?
+        matches = []
+        for handler in handlers:
+            if handler.startswith(search):
+                matches.append(handler)
+        if len(matches) == 1:
+            return matches[0]
+
     # nothing found
     return None
 
 
-def split_args(args: List[str], handlers: List[str], unescape: bool = False) -> Dict[str, List[str]]:
+def split_args(args: List[str], handlers: List[str], unescape: bool = False, partial: bool = False) -> Dict[str, List[str]]:
     """
     Splits the command-line arguments into handler and their associated arguments.
     Special entry "" is used for global options.
@@ -87,6 +92,8 @@ def split_args(args: List[str], handlers: List[str], unescape: bool = False) -> 
     :type handlers: list
     :param unescape: whether to unescape unicode chars
     :type unescape: bool
+    :param partial: whether to allow partial matches (may interfer with options, so use carefully)
+    :type partial: bool
     :return: the dictionary for handler index / handler name + options list
     :rtype: dict
     """
@@ -99,7 +106,7 @@ def split_args(args: List[str], handlers: List[str], unescape: bool = False) -> 
         args = unescape_args(args)
 
     for arg in args:
-        handler = resolve_handler(arg, handlers_set)
+        handler = resolve_handler(arg, handlers_set, partial=partial)
         if handler is not None:
             if len(last_handler) > 0:
                 result[str(len(result))] = last_args
