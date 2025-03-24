@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.2.14 (2025-03-24)
+-------------------
+
+- added `resume_from` parameter to `seppl.io.locate_files` method which allows to skip all
+  files preceding this glob
+
+
 0.2.13 (2025-03-14)
 -------------------
 

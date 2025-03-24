@@ -1,3 +1,4 @@
+import fnmatch
 import glob
 import os
 
@@ -6,7 +7,8 @@ from seppl.placeholders import expand_placeholders
 
 
 def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str]] = None,
-                 recursive: bool = False, fail_if_empty: bool = False, default_glob: str = None) -> List[str]:
+                 recursive: bool = False, fail_if_empty: bool = False, default_glob: str = None,
+                 resume_from: str = None) -> List[str]:
     """
     Locates all the files from the specified inputs, which may contain globs.
     glob results get sorted to ensure the same file order each time.
@@ -24,6 +26,8 @@ def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str
     :type fail_if_empty: bool
     :param default_glob: the default glob to use, ignored if None
     :type default_glob: str
+    :param resume_from: the file name to resume from (glob syntax)
+    :type resume_from: str
     :return: the expanded list of files
     :rtype: list
     """
@@ -88,5 +92,17 @@ def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str
 
     if fail_if_empty and (len(result) == 0):
         raise Exception("Failed to locate any files using: %s" % str(inputs))
+
+    # skip items?
+    if resume_from is not None:
+        index = None
+        for i, item in enumerate(result):
+            if fnmatch.fnmatch(item, resume_from):
+                index = i
+                break
+        if index is not None:
+            result = result[index:]
+        else:
+            print("WARNING: resume from '%s' not found!" % resume_from)
 
     return result
