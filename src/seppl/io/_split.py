@@ -1,6 +1,9 @@
+import argparse
 import math
-
+import re
 from typing import Dict, List
+
+from ._writer import Writer
 
 
 def gcd(values: List[int]):
@@ -27,7 +30,7 @@ class Splitter:
     Class for dividing a token stream into sub-streams.
     """
 
-    def __init__(self, split_ratios: List[int], split_names: List[str]):
+    def __init__(self, split_ratios: List[int], split_names: List[str], split_group: str = None):
         """
         Initializes the splitter.
 
@@ -35,12 +38,16 @@ class Splitter:
         :type split_ratios: list
         :param split_names: the list of names to use for the splits
         :type split_names: list
+        :param split_group: the (optional) regexp with one group use for keeping items in the same split, e.g., base name of a file or sample ID
+        :type split_group: str
         """
         self.split_ratios = split_ratios
         self.split_names = split_names
+        self.split_group = split_group
         self._schedule = None
         self._counter = 0
         self._stats = None
+        self._groups = None
 
     def initialize(self):
         """
@@ -62,6 +69,7 @@ class Splitter:
             self._schedule[i + 1] = self._schedule[i] + ratio / _gcd
         self._counter = 0
         self._stats = dict()
+        self._groups = dict()
 
     def reset(self):
         """
@@ -69,14 +77,26 @@ class Splitter:
         """
         self._counter = 0
         self._stats = dict()
+        self._groups = dict()
 
-    def next(self) -> str:
+    def next(self, item: str = None) -> str:
         """
         Returns the next split name.
 
+        :param item: the item to extract the group from
+        :type item: str
         :return: the name of the split
         :rtype: str
         """
+        # did the group already have a split assigned?
+        group = None
+        if (item is not None) and (self.split_group is not None):
+            m = re.match(self.split_group, item)
+            if m is not None:
+                group = m.group(1)
+                if group in self._groups:
+                    return self._groups[group]
+
         split = None
         for i in range(len(self.split_names)):
             if (self._counter >= self._schedule[i]) and (self._counter < self._schedule[i + 1]):
@@ -92,6 +112,10 @@ class Splitter:
             self._stats[split] = 0
         self._stats[split] += 1
 
+        # record split for the group
+        if group is not None:
+            self._groups[group] = split
+
         return split
 
     def stats(self) -> Dict:
@@ -105,3 +129,63 @@ class Splitter:
         Returns the counter.
         """
         return self._counter
+
+
+def init_splitting_params(writer: Writer, split_names: List[str] = None, split_ratios: List[int] = None, split_group: str = None):
+    """
+    Initializes the splitting parameters of the writer.
+
+    :param writer: the writer to initialize
+    :type writer: Writer
+    :param split_names: the names of the splits, no splitting if None
+    :type split_names: list
+    :param split_ratios: the integer ratios of the splits (must sum up to 100)
+    :type split_ratios: list
+    :param split_group: the regular expression with a single group used for keeping items in the same split, e.g., for identifying the base name of a file or the sample ID
+    :type split_group: str
+    """
+    writer.split_names = split_names[:] if (split_names is not None) else None
+    writer.split_ratios = split_ratios[:] if (split_ratios is not None) else None
+    writer.split_group = split_group
+    writer.splitter = None
+
+
+def add_splitting_params(parser: argparse.ArgumentParser):
+    """
+    Adds the split ratios/names parameters to the parser.
+
+    :param parser: the parser
+    :type parser: argparse.ArgumentParser
+    """
+    parser.add_argument("--split_ratios", type=int, default=None, help="The split ratios to use for generating the splits (must sum up to 100)", nargs="+")
+    parser.add_argument("--split_names", type=str, default=None, help="The split names to use for the generated splits.", nargs="+")
+    parser.add_argument("--split_group", type=str, default=None, help="The regular expression with a single group used for keeping items in the same split, e.g., for identifying the base name of a file or the sample ID.")
+
+
+def transfer_splitting_params(ns: argparse.Namespace, writer: Writer):
+    """
+    Transfers the splitting parameters from the parsed namespace into the writer.
+
+    :param ns: the namespace to transfer from
+    :type ns: argparse.Namespace
+    :param writer: the writer to update
+    :type writer: Writer
+    """
+    writer.split_names = ns.split_names[:] if ((ns.split_names is not None) and (len(ns.split_names) > 0)) else None
+    writer.split_ratios = ns.split_ratios[:] if ((ns.split_ratios is not None) and (len(ns.split_ratios) > 0)) else None
+    writer.split_group = ns.split_group
+
+
+def initialize_splitting(writer: Writer):
+    """
+    Initializes the splitting in the writer.
+
+    :param writer: the writer to initialize, if necessary
+    :type writer: Writer
+    """
+    if not hasattr(writer, "split_names"):
+        return
+    if (getattr(writer, "split_names") is None) or (getattr(writer, "split_ratios") is None):
+        return
+    writer.splitter = Splitter(split_ratios=writer.split_ratios, split_names=writer.split_names, split_group=writer.split_group)
+    writer.splitter.initialize()

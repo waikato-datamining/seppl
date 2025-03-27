@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.2.15 (????-??-??)
+-------------------
+
+- added support to the `seppl.io.Splitter` class for keeping item/sample groups together via a `split_group`
+  regular expression
+- backported helper methods for `seppl.io.Writer` classes for managing splitting
+
+
 0.2.14 (2025-03-24)
 -------------------
 
