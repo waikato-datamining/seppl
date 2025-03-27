@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.2.15 (????-??-??)
+0.2.15 (2025-03-28)
 -------------------
 
 - added support to the `seppl.io.Splitter` class for keeping item/sample groups together via a `split_group`
