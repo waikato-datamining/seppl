@@ -1,15 +1,16 @@
 import abc
+import argparse
 from typing import List
 
 from wai.logging import LOGGING_WARNING
-from seppl import InputConsumer, OutputProducer, PluginWithLogging, Initializable, init_initializable, Session, SessionHandler
+from seppl import InputConsumer, OutputProducer, PluginWithLogging, Initializable, init_initializable, Session, SessionHandler, SkippablePlugin, add_skip_option
 
 FILTER_ACTION_KEEP = "keep"
 FILTER_ACTION_DISCARD = "discard"
 FILTER_ACTIONS = [FILTER_ACTION_KEEP, FILTER_ACTION_DISCARD]
 
 
-class Filter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandler, Initializable, abc.ABC):
+class Filter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandler, Initializable, SkippablePlugin, abc.ABC):
     """
     Base class for filters.
     """
@@ -26,6 +27,38 @@ class Filter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandler, I
         super().__init__(logger_name=logger_name, logging_level=logging_level)
         self._session = None
         self._last_input = None
+        self.skip = False
+
+    def _create_argparser(self) -> argparse.ArgumentParser:
+        """
+        Creates an argument parser. Derived classes need to fill in the options.
+
+        :return: the parser
+        :rtype: argparse.ArgumentParser
+        """
+        parser = super()._create_argparser()
+        add_skip_option(parser)
+        return parser
+
+    def _apply_args(self, ns: argparse.Namespace):
+        """
+        Initializes the object with the arguments of the parsed namespace.
+
+        :param ns: the parsed arguments
+        :type ns: argparse.Namespace
+        """
+        super()._apply_args(ns)
+        self.skip = ns.skip
+
+    @property
+    def is_skipped(self) -> bool:
+        """
+        Returns whether the plugin is to be skipped.
+
+        :return: True if to be skipped
+        :rtype: bool
+        """
+        return self.skip
 
     @property
     def session(self) -> Session:

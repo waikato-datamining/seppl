@@ -57,6 +57,12 @@ the following two methods:
 * `_apply_args(self, ns: argparse.Namespace)`: in this method, you need to 
   transfer the parsed options into member variables of your plugin 
 
+The `SkippablePlugin` mixin, as implemented by `Filter` and `Writer`, allows
+the disabling of the plugin via the `--skip` flag. Plugins that were disabled
+this way, get automatically removed when calling the `args_to_objects` function.
+This is an easy way of turning on/off parts of a pipeline without having to
+remove complex filter/writer configurations.
+
 
 ### Aliases
 

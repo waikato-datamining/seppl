@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.2.16 (2025-04-08)
+-------------------
+
+- filters and writers can be skipped now via the `--skip` flag, making it easy for external
+  scripts to enable/disable pipeline components
+
+
 0.2.15 (2025-03-28)
 -------------------
 

@@ -340,3 +340,31 @@ def check_compatibility(plugins: List[Plugin], match_all=AnyData):
                 "Output(s) of " + index1 + "/" + plugin1.name()
                 + " not compatible with input(s) of " + index2 + "/" + plugin2.name() + ": "
                 + classes_to_str(classes1) + " != " + classes_to_str(classes2))
+
+
+class SkippablePlugin:
+    """
+    Mixin for plugins that can be disabled, i.e., get skipped in the pipeline.
+    """
+
+    @property
+    def is_skipped(self) -> bool:
+        """
+        Returns whether the plugin is to be skipped.
+
+        :return: True if to be skipped
+        :rtype: bool
+        """
+        return False
+
+
+def add_skip_option(parser: argparse.ArgumentParser, help_str: str = "Disables the plugin, removing it from the pipeline."):
+    """
+    Adds the --skip option to the argument parser.
+
+    :param parser: the parser to update
+    :type parser: argparse.ArgumentParser
+    :param help_str: the help string to use
+    :type help_str: str
+    """
+    parser.add_argument("--skip", action="store_true", default=False, help=help_str, required=False)
