@@ -429,7 +429,6 @@ class ClassListerRegistry:
 
         self._classes[c] = sorted(list(all_classes))
 
-
     def plugins(self, c: Union[str, Type], fail_if_empty: bool = True) -> Dict[str, Plugin]:
         """
         Returns the classes for the specified superclass.
