@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.2.17 (2025-06-26)
+-------------------
+
+- replaced deprecated `pkg_resources` with `importlib.metadata`-based approach
+  (based on: https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/#using-package-metadata)
+
+
 0.2.16 (2025-04-08)
 -------------------
 

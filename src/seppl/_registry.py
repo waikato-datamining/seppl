@@ -5,7 +5,10 @@ import sys
 import traceback
 
 from typing import List, Union, Optional, Dict
-from pkg_resources import working_set
+if sys.version_info < (3, 10):
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
 
 from ._plugin import get_all_names, get_aliases, Plugin
 from ._types import get_class, get_class_name
@@ -432,10 +435,11 @@ class Registry:
         c = self._init_plugin_class(c)
         result = dict()
 
-        for item in working_set.iter_entry_points(group, None):
+        for item in entry_points(group=group):
             # format: "plugin_name=plugin_module:plugin_class",
             if self.mode == MODE_EXPLICIT:
-                cls = get_class(module_name=item.module_name, class_name=item.attrs[0])
+                module_name, class_name = item.value.split(":")
+                cls = get_class(module_name=module_name, class_name=class_name)
                 if issubclass(cls, c):
                     p = cls()
                     if self._register_plugin(result, p):
@@ -446,8 +450,9 @@ class Registry:
                         self._all_aliases.update(get_aliases(p))
             # format: "unique_string=plugin_module:superclass_name",
             elif self.mode == MODE_DYNAMIC:
-                c = get_class(full_class_name=".".join(item.attrs))
-                result.update(self._register_from_module(item.module_name, c))
+                module_name, class_name = item.value.split(":")
+                c = get_class(full_class_name=class_name)
+                result.update(self._register_from_module(module_name, c))
             else:
                 raise Exception("Unhandled mode: %s" % self.mode)
 

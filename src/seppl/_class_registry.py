@@ -5,7 +5,10 @@ import sys
 import traceback
 from typing import Callable, Union, List, Optional, Type, Dict
 
-from pkg_resources import working_set
+if sys.version_info < (3, 10):
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
 
 from ._types import get_class_name, get_class
 from ._plugin import Plugin, get_all_names, get_aliases
@@ -369,13 +372,8 @@ class ClassListerRegistry:
         """
         result = []
         class_listers = []
-        for item in working_set.iter_entry_points("class_lister", None):
-            if len(item.attrs) > 0:
-                # format: "name=module:function"
-                class_listers.append(item.module_name + ":" + item.attrs[0])
-            else:
-                # format: "name=module"
-                class_listers.append(item.module_name)
+        for item in entry_points(group="class_lister"):
+            class_listers.append(item.value)
         if len(class_listers) > 0:
             result = self._determine_from_class_listers(c, class_listers)
         return result
