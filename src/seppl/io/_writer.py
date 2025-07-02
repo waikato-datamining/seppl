@@ -120,6 +120,13 @@ class Writer(PluginWithLogging, InputConsumer, SessionHandler, SkippablePlugin, 
         raise NotImplementedError()
 
 
+class DirectWriter:
+    """
+    Mixin for classes that support direct writing to file-like objects.
+    """
+    pass
+
+
 class StreamWriter(Writer, abc.ABC):
     """
     Ancestor for classes that write data one record at a time.
@@ -145,5 +152,36 @@ class BatchWriter(Writer, abc.ABC):
 
         :param data: the data to write
         :type data: Iterable
+        """
+        raise NotImplementedError()
+
+
+class DirectStreamWriter(DirectWriter):
+    """
+    Mixin for stream writers that support writing directly to file-like object.
+    """
+
+    def write_stream_fp(self, data, fp):
+        """
+        Saves the data one by one.
+
+        :param data: the data to write (single record or iterable of records)
+        :param fp: the file-like object to write to
+        """
+        raise NotImplementedError()
+
+
+class DirectBatchWriter(DirectWriter):
+    """
+    Mixin for batch writers that can write to file-like objects directly.
+    """
+
+    def write_batch_fp(self, data: Iterable, fp):
+        """
+        Saves the data in one go.
+
+        :param data: the data to write
+        :type data: Iterable
+        :param fp: the file-like object to write to
         """
         raise NotImplementedError()

@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.2.18 (2025-07-03)
+-------------------
+
+- formalized support for direct read from/write to file-like objects with the
+  `DirectReader`, `DirectStreamWriter`, `DirectBatchWriter` mixins
+
+
 0.2.17 (2025-06-26)
 -------------------
 

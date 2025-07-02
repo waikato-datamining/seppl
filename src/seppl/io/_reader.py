@@ -61,3 +61,39 @@ class Reader(PluginWithLogging, OutputProducer, SessionHandler, abc.ABC):
         :rtype: bool
         """
         raise NotImplementedError()
+
+
+class DirectReader:
+    """
+    Mixin for readers that can read directly from a file-like object.
+    """
+
+    @property
+    def direct_read(self) -> bool:
+        """
+        Returns whether the reader is in direct read mode.
+
+        :return: True if in direct read mode
+        :rtype: bool
+        """
+        raise NotImplementedError()
+
+    @direct_read.setter
+    def direct_read(self, direct: bool):
+        """
+        Sets whether the reader is to be used in direct mode or not.
+
+        :param direct: True if to use in direct read mode
+        :type direct: bool
+        """
+        raise NotImplementedError()
+
+    def read_fp(self, fp) -> Iterable:
+        """
+        Reads the data from the file-like object and returns the items one by one.
+
+        :param fp: the file-like object to read from
+        :return: the data
+        :rtype: Iterable
+        """
+        raise NotImplementedError()
