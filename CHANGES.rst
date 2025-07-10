@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.2.19 (????-??-??)
+0.2.19 (2025-07-10)
 -------------------
 
 - the write methods of `DirectStreamWriter` and `DirectBatchWriter` now have the additional
