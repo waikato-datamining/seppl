@@ -33,7 +33,7 @@ setup(
     install_requires=[
         "setuptools",
     ],
-    version="0.2.18=9",
+    version="0.2.19",
     author='Peter Reutemann',
     author_email='fracpete@waikato.ac.nz',
     entry_points={
