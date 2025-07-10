@@ -161,12 +161,14 @@ class DirectStreamWriter(DirectWriter):
     Mixin for stream writers that support writing directly to file-like object.
     """
 
-    def write_stream_fp(self, data, fp):
+    def write_stream_fp(self, data, fp, as_bytes: bool):
         """
         Saves the data one by one.
 
         :param data: the data to write (single record or iterable of records)
         :param fp: the file-like object to write to
+        :param as_bytes: whether to write as str or bytes
+        :type as_bytes: bool
         """
         raise NotImplementedError()
 
@@ -176,12 +178,14 @@ class DirectBatchWriter(DirectWriter):
     Mixin for batch writers that can write to file-like objects directly.
     """
 
-    def write_batch_fp(self, data: Iterable, fp):
+    def write_batch_fp(self, data: Iterable, fp, as_bytes: bool):
         """
         Saves the data in one go.
 
         :param data: the data to write
         :type data: Iterable
         :param fp: the file-like object to write to
+        :param as_bytes: whether to write as str or bytes
+        :type as_bytes: bool
         """
         raise NotImplementedError()
