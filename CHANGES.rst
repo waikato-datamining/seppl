@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.2.20 (????-??-??)
+0.2.20 (2025-07-15)
 -------------------
 
 - the `is_help_requested` method can now pinpoint whether global help or help for a specific
