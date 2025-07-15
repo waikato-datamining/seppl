@@ -93,7 +93,7 @@ def split_args(args: List[str], handlers: List[str], unescape: bool = False, par
     :type handlers: list
     :param unescape: whether to unescape unicode chars
     :type unescape: bool
-    :param partial: whether to allow partial matches (may interfer with options, so use carefully)
+    :param partial: whether to allow partial matches (may interfere with options, so use carefully)
     :type partial: bool
     :return: the dictionary for handler index / handler name + options list
     :rtype: dict
@@ -125,7 +125,8 @@ def split_args(args: List[str], handlers: List[str], unescape: bool = False, par
     return result
 
 
-def args_to_objects(args: Dict[str, List[str]], valid_plugins: Dict[str, Plugin], allow_global_options: bool = False, allow_unknown_args: bool = False, unescape: bool = False) -> List[Plugin]:
+def args_to_objects(args: Dict[str, List[str]], valid_plugins: Dict[str, Plugin], allow_global_options: bool = False,
+                    allow_unknown_args: bool = False, unescape: bool = False) -> List[Plugin]:
     """
     Instantiates the plugins from the parsed arguments dictionary.
     Automatically removes SkippablePlugin instances that are to be skipped.
@@ -143,6 +144,7 @@ def args_to_objects(args: Dict[str, List[str]], valid_plugins: Dict[str, Plugin]
     :return: the list of instantiated plugins
     :rtype: list
     """
+    valid_plugins_set = set(valid_plugins.keys())
     result = []
     for key in args:
         if key == "":
@@ -151,7 +153,9 @@ def args_to_objects(args: Dict[str, List[str]], valid_plugins: Dict[str, Plugin]
             else:
                 continue
 
-        name = args[key][0]
+        name = resolve_handler(args[key][0], valid_plugins_set, partial=False)
+        if name is None:
+            raise Exception("Unknown plugin: %s" % args[key][0])
         plugin = copy.deepcopy(valid_plugins[name])
         sub_args = args[key][1:]
         if unescape:
@@ -175,21 +179,27 @@ def args_to_objects(args: Dict[str, List[str]], valid_plugins: Dict[str, Plugin]
     return result
 
 
-def is_help_requested(args: List[str]) -> Tuple[bool, bool, str]:
+def is_help_requested(args: List[str], handlers: List[str] = None, partial: bool = False) -> Tuple[bool, bool, str]:
     """
     Checks whether help was requested.
 
     :param args: the arguments to check
     :type args: list
+    :param handlers: the list of valid handler names
+    :type handlers: list
+    :param partial: whether to allow partial matches (may interfere with options, so use carefully)
+    :type partial: bool
     :return: the tuple of help requested: (help_requested, plugin_details, plugin_name)
     :rtype: tuple
     """
     help_requested = False
     plugin_details = False
+    determine_plugin_name = False
     plugin_name = None
     for index, arg in enumerate(args):
         if (arg == "-h") or (arg == "--help"):
             help_requested = True
+            determine_plugin_name = True
             break
         if arg == "--help-all":
             help_requested = True
@@ -200,6 +210,27 @@ def is_help_requested(args: List[str]) -> Tuple[bool, bool, str]:
             if index < len(args) - 1:
                 plugin_name = args[index + 1]
             break
+
+    # check whether for specific plugin
+    if determine_plugin_name and (handlers is not None):
+        handlers_set = set(handlers)
+        parts = split_args(args, handlers, unescape=False, partial=partial)
+        for k in parts:
+            # global help request?
+            if len(k) == 0:
+                if ("-h" in parts[k]) or ("--help" in parts[k]):
+                    break
+            # skip part with just a single option (we need at least plugin_name + help_flag)
+            if len(parts[k]) < 2:
+                continue
+            # is help flag present in options and after a plugin name (ie not at first position)?
+            sub_parts = parts[k][1:]
+            if ("-h" in sub_parts) or ("--help" in sub_parts):
+                name = resolve_handler(parts[k][0], handlers_set, partial=partial)
+                if name is not None:
+                    plugin_name = name
+                    break
+
     return help_requested, plugin_details, plugin_name
 
 

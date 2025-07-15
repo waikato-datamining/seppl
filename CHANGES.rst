@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.2.20 (????-??-??)
+-------------------
+
+- the `is_help_requested` method can now pinpoint whether global help or help for a specific
+  plugin was requested (requires supplying a list of valid handler names and whether to use
+  partial matching)
+- the `args_to_objects` method now resolves the plugin name and throws an error if it is
+  flagged as unknown
+
+
 0.2.19 (2025-07-10)
 -------------------
 
