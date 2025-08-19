@@ -57,7 +57,8 @@ class ClassListerRegistry:
     """
 
     def __init__(self, default_class_listers: Union[str, List[str]] = None, env_class_listers: str = None,
-                 excluded_class_listers: Union[str, List[str]] = None, env_excluded_class_listers: str = None):
+                 excluded_class_listers: Union[str, List[str]] = None, env_excluded_class_listers: str = None,
+                 ignored_class_listers: Union[str, List[str]] = None, env_ignored_class_listers: str = None):
         """
 
         :param default_class_listers: the default class lister(s) to use
@@ -66,8 +67,12 @@ class ClassListerRegistry:
         :type env_class_listers: str
         :param excluded_class_listers: the class lister(s) to exclude from being used
         :type excluded_class_listers: str or list
-        :param env_excluded_class_listers: the environmenr variable to retrieve the excluded class lister(s) from
+        :param env_excluded_class_listers: the environment variable to retrieve the excluded class lister(s) from
         :type env_excluded_class_listers: str
+        :param ignored_class_listers: the class lister(s) providing classes that should be ignored
+        :type ignored_class_listers: str or list
+        :param env_ignored_class_listers: the environment variable to retrieve the class lister(s) providing ignored clases
+        :type env_ignored_class_listers: str
         """
 
         self._classes = dict()
@@ -76,12 +81,16 @@ class ClassListerRegistry:
         self._env_class_listers = None
         self._excluded_class_listers = None
         self._env_excluded_class_listers = None
+        self._ignored_class_listers = None
+        self._env_ignored_class_listers = None
         self._custom_class_listers = None
 
         self.default_class_listers = default_class_listers
         self.env_class_listers = env_class_listers
         self.excluded_class_listers = excluded_class_listers
         self.env_excluded_class_listers = env_excluded_class_listers
+        self.ignored_class_listers = ignored_class_listers
+        self.env_ignored_class_listers = env_ignored_class_listers
 
     @property
     def default_class_listers(self) -> Optional[List[str]]:
@@ -184,6 +193,56 @@ class ClassListerRegistry:
         self._classes = dict()
 
     @property
+    def ignored_class_listers(self) -> Optional[List[str]]:
+        """
+        Returns the class lister functions providing ignored classes.
+
+        :return: the functions
+        :rtype: list
+        """
+        return self._ignored_class_listers
+
+    @ignored_class_listers.setter
+    def ignored_class_listers(self, ignored_class_listers: Optional[Union[str, List[str]]]):
+        """
+        Sets/unsets the class lister functions providing ignored classes. Clears the class cache.
+
+        :param ignored_class_listers: the list of class listers providing ignored classes, None to unset
+        :type ignored_class_listers: list
+        """
+        if ignored_class_listers is None:
+            ignored_class_listers = ""
+        if isinstance(ignored_class_listers, str):
+            ignored_class_listers = [x.strip() for x in ignored_class_listers.split(",")]
+        elif isinstance(ignored_class_listers, list):
+            ignored_class_listers = ignored_class_listers[:]
+        else:
+            raise Exception("ignored_class_listers must be either str or list, but got: %s" % str(type(ignored_class_listers)))
+        self._ignored_class_listers = ignored_class_listers
+        self._classes = dict()
+
+    @property
+    def env_ignored_class_listers(self) -> Optional[str]:
+        """
+        Returns the environment variable with the class lister functions providing ignored classes (if any).
+
+        :return: the class lister functions providing ignored classes, None if none set
+        :rtype: str
+        """
+        return self._env_ignored_class_listers
+
+    @env_ignored_class_listers.setter
+    def env_ignored_class_listers(self, ignored_class_listers: Optional[str]):
+        """
+        Sets/unsets the environment variable with the class lister functions providing ignored classes. Clears the class cache.
+
+        :param ignored_class_listers: the environment variable with the class lister functions providing ignored classes, None to unset
+        :type ignored_class_listers: str
+        """
+        self._env_ignored_class_listers = ignored_class_listers
+        self._classes = dict()
+
+    @property
     def custom_class_listers(self) -> Optional[List[str]]:
         """
         Returns the custom class listers (if any).
@@ -228,6 +287,18 @@ class ClassListerRegistry:
                and (os.getenv(self._env_excluded_class_listers) is not None) \
                and (len(os.getenv(self._env_excluded_class_listers)) > 0)
 
+    def has_env_ignored_class_listers(self) -> bool:
+        """
+        Checks whether an environment variable for class listers providing ignored classes is set.
+
+        :return: True if set
+        :rtype: bool
+        """
+        return (self._env_ignored_class_listers is not None) \
+               and (len(self._env_ignored_class_listers) > 0) \
+               and (os.getenv(self._env_ignored_class_listers) is not None) \
+               and (len(os.getenv(self._env_ignored_class_listers)) > 0)
+    
     def _expand_default_class_listers_placeholder(self, c: str) -> str:
         """
         Expands the DEFAULT class listers placeholder in the comma-separated class listers string.
@@ -275,6 +346,20 @@ class ClassListerRegistry:
 
         return self.excluded_class_listers[:]
 
+    def actual_ignored_class_listers(self) -> List[str]:
+        """
+        Returns list the of class listers providing ignored classes.
+        Precedence: ignored_env_class_listers > ignored_class_listers
+
+        :return: the list of class listers
+        :rtype: list
+        """
+        if self.has_env_ignored_class_listers():
+            m = self._expand_default_class_listers_placeholder(os.getenv(self._env_ignored_class_listers))
+            return [x.strip() for x in m.split(",")]
+
+        return self.ignored_class_listers[:]
+
     def _determine_sub_classes(self, cls: Type, module_name: str) -> List[str]:
         """
         Determines all the sub-classes of type cls in the specified module.
@@ -310,6 +395,52 @@ class ClassListerRegistry:
                     traceback.print_exc()
                     continue
                 result.append(get_class_name(att))
+
+        return result
+
+    def _determine_ignored_classes_from_class_listers(self, c: str, class_listers: List[str]) -> List[str]:
+        """
+        Determines the ignored classes via the specified class listers.
+
+        :param c: the superclass to get the classes for
+        :type c: str
+        :param class_listers: the class lister functions to use
+        :type class_listers: list
+        :return: the determined list of ignored classes
+        :rtype: list
+        """
+        result = []
+
+        if len(class_listers) > 0:
+            cls = None
+
+            for class_lister in class_listers:
+                if class_lister == "":
+                    continue
+
+                if cls is None:
+                    try:
+                        cls = get_class(c)
+                    except:
+                        print("Failed to instantiate class: %s" % c, file=sys.stderr)
+                        traceback.print_exc()
+                        return result
+
+                try:
+                    func = get_class_lister(class_lister)
+                except:
+                    print("Problem encountered with class lister: %s" % class_lister, file=sys.stderr)
+                    traceback.print_exc()
+                    continue
+
+                if self.excluded_class_listers is not None:
+                    if class_lister in self.excluded_class_listers:
+                        continue
+
+                if inspect.isfunction(func):
+                    class_dict = func()
+                    if c in class_dict:
+                        result.extend(class_dict[c])
 
         return result
 
@@ -424,7 +555,14 @@ class ClassListerRegistry:
         for cls in excluded_classes:
             if cls in all_classes:
                 all_classes.remove(cls)
-
+                
+        # ignored classes?
+        ignored_listers = self.actual_ignored_class_listers()
+        ignored_classes = self._determine_ignored_classes_from_class_listers(c, ignored_listers)
+        for cls in ignored_classes:
+            if cls in all_classes:
+                all_classes.remove(cls)
+                
         self._classes[c] = sorted(list(all_classes))
 
     def plugins(self, c: Union[str, Type], fail_if_empty: bool = True) -> Dict[str, Plugin]:

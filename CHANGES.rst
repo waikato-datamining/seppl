@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.2.21 (????-??-??)
+-------------------
+
+- the `ClassRegistry` now supports class listers that list class names (not modules!) to be *ignored*,
+  i.e., ones that should be returned for their class hierarchies; useful when excluding
+  inherited plugins that are not applicable in the concrete application
+
+
 0.2.20 (2025-07-15)
 -------------------
 

@@ -193,3 +193,63 @@ plugins = REGISTRY.plugins(Plugin)
 generate_help(plugins.values(), help_format=HELP_FORMAT_MARKDOWN,
               output_path="..")
 ```
+
+### Advanced usage
+
+#### Ignoring classes 
+
+When inheriting plugins from other libraries, not all of them may be applicable
+in the current application's context. The `ClassListerRegistry` therefore
+allows you to specify class lister functions that return the full class names
+of classes to ignore.
+
+The following class lister (`my.class_lister_ignored`) returns a single 
+class name of a plugin to be ignored:
+
+```python
+from typing import List, Dict
+
+
+def list_classes() -> Dict[str, List[str]]:
+    return {
+        "seppl.Plugin": [
+            "my.plugins.UselessPlugin",
+        ],
+    }
+```
+
+```python
+from seppl import ClassListerRegistry
+
+# the default class lister
+MY_DEFAULT_CLASS_LISTERS = "my.class_lister"
+
+# the environment variable to use for overriding the default modules
+# (comma-separated list)
+MY_ENV_CLASS_LISTERS = "MY_CLASS_LISTERS"
+
+# the default class lister
+MY_DEFAULT_CLASS_LISTERS_IGNORED = "my.class_lister_ignored"
+
+# the environment variable to use for overriding the default modules
+# (comma-separated list)
+MY_ENV_CLASS_LISTERS_IGNORED = "MY_CLASS_LISTERS_IGNORED"
+
+# singleton of the Registry
+REGISTRY = ClassListerRegistry(default_class_listers=MY_DEFAULT_CLASS_LISTERS,
+                               env_class_listers=MY_ENV_CLASS_LISTERS,
+                               ignored_class_listers=MY_DEFAULT_CLASS_LISTERS_IGNORED,
+                               env_ignored_class_listers=MY_ENV_CLASS_LISTERS_IGNORED)
+```
+
+#### Excluding class listers 
+
+When developing multi-module applications, generating the documentation for
+sub-modules should not necessarily include the plugins from super-modules.
+
+When instantiating the `ClassListerRegistry` object, you can therefore
+specify the class name(s) of the class listers to exclude via the 
+`excluded_class_listers` parameter of the constructor. The parameter
+`env_excluded_class_listers` can be used to specify an environment variable
+that contains the comma-separated list of class names of the class listers 
+to exclude.
