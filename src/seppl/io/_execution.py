@@ -81,7 +81,7 @@ def _batch_execution(reader: Reader, filter_: Optional[Filter], writer: Optional
             raise Exception("Neither stream nor batch writer: %s" % str(type(writer)))
 
 
-def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writer: Writer,
+def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writer: Optional[Writer],
             session: Session = None):
     """
     Executes the pipeline.
@@ -90,7 +90,7 @@ def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writ
     :type reader: Reader
     :param filters: the filter(s) to use, can be None
     :type filters: list or Filter
-    :param writer: the writer to use
+    :param writer: the writer to use, can be None
     :type writer: Writer
     :param session: the session object to use, creates default one if None
     :type session: Session
