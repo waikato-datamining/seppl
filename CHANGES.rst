@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.2.21 (????-??-??)
+0.2.21 (2025-08-19)
 -------------------
 
 - the `ClassRegistry` now supports class listers that list class names (not modules!) to be *ignored*,
