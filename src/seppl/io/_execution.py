@@ -28,9 +28,13 @@ def _stream_execution(reader: Reader, filter_: Optional[Filter], writer: Optiona
         for item in reader.read():
             if item is None:
                 continue
+            if session.stopped:
+                return
             session.count += 1
             if (filter_ is not None) and (item is not None):
                 item = filter_.process(item)
+            if session.stopped:
+                return
             if item is not None:
                 if writer is not None:
                     writer.write_stream(item)
@@ -56,16 +60,24 @@ def _batch_execution(reader: Reader, filter_: Optional[Filter], writer: Optional
         for item in reader.read():
             if item is None:
                 continue
+            if session.stopped:
+                return
             session.count += 1
             data.append(item)
             if session.count % session.options.update_interval == 0:
                 session.logger.info("%d records read..." % session.count)
+
+    if session.stopped:
+        return
 
     if filter_ is not None:
         data = filter_.process(data)
         session.logger.info("%d records filtered..." % session.count)
         if not isinstance(data, list):
             data = [data]
+
+    if session.stopped:
+        return
 
     if writer is not None:
         if isinstance(writer, StreamWriter):

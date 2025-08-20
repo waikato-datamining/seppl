@@ -24,6 +24,9 @@ class Session:
     current_input = None
     """ the current input etc. """
 
+    stopped: bool = False
+    """ flag to indicate whether to stop the execution. """
+
     def _add_option(self, name: str, value):
         """
         Adds the key/value to the global options.
