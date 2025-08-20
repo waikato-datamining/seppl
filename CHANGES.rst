@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.2.22 (????-??-??)
+-------------------
+
+- added `@abc.abstractmethod` decorator where appropriate
+
+
 0.2.21 (2025-08-19)
 -------------------
 

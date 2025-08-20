@@ -44,6 +44,7 @@ class Reader(PluginWithLogging, OutputProducer, SessionHandler, abc.ABC):
         """
         self._session = s
 
+    @abc.abstractmethod
     def read(self) -> Iterable:
         """
         Loads the data and returns the items one by one.
@@ -53,6 +54,7 @@ class Reader(PluginWithLogging, OutputProducer, SessionHandler, abc.ABC):
         """
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def has_finished(self) -> bool:
         """
         Returns whether reading has finished.
@@ -69,6 +71,7 @@ class DirectReader:
     """
 
     @property
+    @abc.abstractmethod
     def direct_read(self) -> bool:
         """
         Returns whether the reader is in direct read mode.
@@ -79,6 +82,7 @@ class DirectReader:
         raise NotImplementedError()
 
     @direct_read.setter
+    @abc.abstractmethod
     def direct_read(self, direct: bool):
         """
         Sets whether the reader is to be used in direct mode or not.
@@ -88,6 +92,7 @@ class DirectReader:
         """
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def read_fp(self, fp) -> Iterable:
         """
         Reads the data from the file-like object and returns the items one by one.

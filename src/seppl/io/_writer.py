@@ -132,6 +132,7 @@ class StreamWriter(Writer, abc.ABC):
     Ancestor for classes that write data one record at a time.
     """
 
+    @abc.abstractmethod
     def write_stream(self, data):
         """
         Saves the data one by one.
@@ -146,6 +147,7 @@ class BatchWriter(Writer, abc.ABC):
     Ancestor of classes that write data all at once.
     """
 
+    @abc.abstractmethod
     def write_batch(self, data: Iterable):
         """
         Saves the data in one go.
@@ -161,6 +163,7 @@ class DirectStreamWriter(DirectWriter):
     Mixin for stream writers that support writing directly to file-like object.
     """
 
+    @abc.abstractmethod
     def write_stream_fp(self, data, fp, as_bytes: bool):
         """
         Saves the data one by one.
@@ -178,6 +181,7 @@ class DirectBatchWriter(DirectWriter):
     Mixin for batch writers that can write to file-like objects directly.
     """
 
+    @abc.abstractmethod
     def write_batch_fp(self, data: Iterable, fp, as_bytes: bool):
         """
         Saves the data in one go.

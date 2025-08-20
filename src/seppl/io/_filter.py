@@ -116,6 +116,7 @@ class Filter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandler, I
         """
         return False
 
+    @abc.abstractmethod
     def _do_process(self, data):
         """
         Processes the data record(s).
