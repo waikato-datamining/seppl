@@ -7,6 +7,7 @@ Changelog
 - added `@abc.abstractmethod` decorator where appropriate
 - added `stopped` flag to `Session` to indicate that the execution is over,
   which is monitored by the `seppl.io.execute(...)` function
+- added `wai_logging>=0.0.4` as dependency
 
 
 0.2.21 (2025-08-19)

@@ -32,6 +32,7 @@ setup(
     packages=find_namespace_packages(where='src'),
     install_requires=[
         "setuptools",
+        "wai_logging>=0.0.4",
     ],
     version="0.2.21",
     author='Peter Reutemann',
