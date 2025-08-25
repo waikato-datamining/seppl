@@ -9,6 +9,7 @@ Changelog
   which is monitored by the `seppl.io.execute(...)` function
 - added `wai_logging>=0.0.5` as dependency
 - added constants for meta-data types: METADATA_TYPE_STRING, METADATA_TYPE_BOOL, METADATA_TYPE_NUMERIC
+- added `load_args` and `save_args` methods for loading args from/saving args to files
 
 
 0.2.21 (2025-08-19)

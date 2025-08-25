@@ -1,5 +1,7 @@
 import copy
+import logging
 import shlex
+import traceback
 
 from typing import List, Dict, Tuple, Iterable, Set, Optional
 from ._plugin import Plugin, SkippablePlugin
@@ -268,3 +270,86 @@ def enumerate_plugins(plugins: Iterable[str], aliases: List[str] = None, alias_f
     if len(line) > 0:
         result.append(line)
     return "\n".join(result)
+
+
+def load_args(path: str, logger: logging.Logger = None) -> List[str]:
+    """
+    Loads the arguments from the specified file.
+
+    :param path: the file containing the arguments
+    :type path: str
+    :param logger: the logger instance to use, ignored if None
+    :type logger: logging.Logger
+    :return: the individual arguments
+    :rtype: list
+    """
+    msg = "Loading pipeline from: %s" % path
+    if logger is not None:
+        logger.info("Loading pipeline from: %s" % path)
+    else:
+        print(msg)
+
+    with open(path, "r") as fp:
+        lines = fp.readlines()
+    lines = [x.strip() for x in lines]
+    result = split_cmdline(" ".join(lines))
+
+    return result
+
+
+def save_args(args: List[str], path: str, prog: str = None, handlers: List[str] = None, logger: logging.Logger = None) -> bool:
+    """
+    Saves the arguments to the specified file.
+
+    :param args: the arguments to save
+    :type args: list
+    :param path: the file to save the arguments to
+    :type path: str
+    :param prog: the executable to prefix the arguments with, ignore if None
+    :type prog: str
+    :param handlers: the handlers for grouping the arguments by handler and making it more readable, uses simple format if None
+    :type handlers: list
+    :param logger: the logger instance to use for outputting information, ignored if None
+    :type logger: logging.Logger
+    :return: whether successfully saved
+    :rtype: bool
+    """
+    try:
+        msg = "Saving arguments to: %s" % path
+        if logger is not None:
+            logger.info(msg)
+        else:
+            print(msg)
+
+        if handlers is not None:
+            split = split_args(args, handlers)
+            with open(path, "w") as fp:
+                if prog is not None:
+                    fp.write(prog + "\n")
+                for group in split:
+                    sub_args = split[group]
+                    # global options (ie group=="")?
+                    if len(group) == 0:
+                        for sub_arg in sub_args:
+                            fp.write("    " + sub_arg + "\n")
+                    else:
+                        # if not global options then don't indent 1st arg (ie plugin name)
+                        fp.write(sub_args[0] + "\n")
+                        sub_args = sub_args[1:]
+                        for sub_arg in sub_args:
+                            fp.write("    " + sub_arg + "\n")
+        else:
+            with open(path, "w") as fp:
+                if prog is not None:
+                    fp.write(prog + "\n")
+                fp.write("\n".join(args))
+
+        return True
+    except:
+        msg = "Failed to save arguments in: %s" % path
+        if logger is not None:
+            logger.error(msg, exc_info=True)
+        else:
+            print(msg)
+            traceback.print_exc()
+        return False
