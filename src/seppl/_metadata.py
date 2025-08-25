@@ -1,5 +1,14 @@
 from typing import Optional, Dict
 
+METADATA_TYPE_STRING = "string"
+METADATA_TYPE_BOOL = "bool"
+METADATA_TYPE_NUMERIC = "numeric"
+METADATA_TYPES = [
+    METADATA_TYPE_STRING,
+    METADATA_TYPE_BOOL,
+    METADATA_TYPE_NUMERIC,
+]
+
 
 class MetaDataHandler(object):
     """
