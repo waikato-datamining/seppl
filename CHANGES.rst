@@ -10,6 +10,8 @@ Changelog
 - added `wai_logging>=0.0.5` as dependency
 - added constants for meta-data types: METADATA_TYPE_STRING, METADATA_TYPE_BOOL, METADATA_TYPE_NUMERIC
 - added `load_args` and `save_args` methods for loading args from/saving args to files
+- the `execute(...)` method now queries the reader whether it has finished after the first read/yield
+  to allow for dynamically locating files during first call to `read()` method after initializing the reader
 
 
 0.2.21 (2025-08-19)

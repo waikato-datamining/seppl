@@ -24,7 +24,7 @@ def _stream_execution(reader: Reader, filter_: Optional[Filter], writer: Optiona
         if not isinstance(writer, StreamWriter):
             raise Exception("Not a stream writer: %s" % str(type(writer)))
 
-    while not reader.has_finished():
+    while True:
         for item in reader.read():
             if item is None:
                 continue
@@ -40,6 +40,8 @@ def _stream_execution(reader: Reader, filter_: Optional[Filter], writer: Optiona
                     writer.write_stream(item)
             if session.count % session.options.update_interval == 0:
                 session.logger.info("%d records processed..." % session.count)
+        if reader.has_finished():
+            break
 
 
 def _batch_execution(reader: Reader, filter_: Optional[Filter], writer: Optional[Writer], session: Session):
@@ -56,7 +58,7 @@ def _batch_execution(reader: Reader, filter_: Optional[Filter], writer: Optional
     :type session: Session
     """
     data = []
-    while not reader.has_finished():
+    while True:
         for item in reader.read():
             if item is None:
                 continue
@@ -66,6 +68,8 @@ def _batch_execution(reader: Reader, filter_: Optional[Filter], writer: Optional
             data.append(item)
             if session.count % session.options.update_interval == 0:
                 session.logger.info("%d records read..." % session.count)
+        if reader.has_finished():
+            break
 
     if session.stopped:
         return
