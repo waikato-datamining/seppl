@@ -140,7 +140,7 @@ def placeholders(input_based: bool = False) -> List[str]:
             continue
         if (not input_based) and (not PLACEHOLDERS_INPUT_BASED[ph]):
             result.append(ph)
-        elif input_based and PLACEHOLDERS_INPUT_BASED[ph]:
+        else:
             result.append(ph)
     return result
 

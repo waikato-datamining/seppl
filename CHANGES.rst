@@ -12,6 +12,8 @@ Changelog
 - added `load_args` and `save_args` methods for loading args from/saving args to files
 - the `execute(...)` method now queries the reader whether it has finished after the first read/yield
   to allow for dynamically locating files during first call to `read()` method after initializing the reader
+- the `placeholders()` function (package: `seppl.placeholders`) now returns the non-input-based ones
+  when outputting input-based ones
 
 
 0.2.21 (2025-08-19)
