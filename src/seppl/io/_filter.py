@@ -1,5 +1,6 @@
 import abc
 import argparse
+import types
 from typing import List, Any, Optional, Union
 
 from wai.logging import LOGGING_WARNING
@@ -12,7 +13,7 @@ FILTER_ACTION_DISCARD = "discard"
 FILTER_ACTIONS = [FILTER_ACTION_KEEP, FILTER_ACTION_DISCARD]
 
 
-class Filter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandler, Initializable, SkippablePlugin, abc.ABC):
+class BatchFilter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandler, Initializable, SkippablePlugin, abc.ABC):
     """
     Base class for filters. Processes data in batches.
     """
@@ -160,7 +161,7 @@ class Filter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandler, I
         return result
 
 
-class StreamFilter(Filter, abc.ABC):
+class StreamFilter(BatchFilter, abc.ABC):
     """
     Ancestor for streaming filters. May produce more output items than are being input.
     """
@@ -238,7 +239,7 @@ class FilterPipelineIterator:
     Iterator for filtering data with zero or more filters efficiently.
     """
 
-    def __init__(self, data: Any, filters: Optional[Union[Filter, List[Filter]]], session: Optional[Session] = None):
+    def __init__(self, data: Any, filters: Optional[Union[BatchFilter, List[BatchFilter]]], session: Optional[Session] = None):
         """
         Initializes the filter iterator.
 
@@ -251,7 +252,7 @@ class FilterPipelineIterator:
         self.data = data
         if filters is None:
             self.filters = []
-        elif isinstance(filters, Filter):
+        elif isinstance(filters, BatchFilter):
             self.filters = [filters]
         else:
             self.filters = filters
@@ -349,7 +350,7 @@ class FilterPipelineIterator:
         raise StopIteration()
 
 
-def filter_data(data: Any, filters: Optional[Union[Filter, List[Filter]]], session: Optional[Session] = None) -> Optional[Any]:
+def filter_data(data: Any, filters: Optional[Union[BatchFilter, List[BatchFilter]]], session: Optional[Session] = None) -> Optional[Any]:
     """
     Generator for filtering data.
 
@@ -373,7 +374,7 @@ class MultiFilter(StreamFilter, Initializable):
     Combines multiple filters.
     """
 
-    def __init__(self, filters: List[Filter] = None, logger_name: str = None, logging_level: str = LOGGING_WARNING):
+    def __init__(self, filters: List[BatchFilter] = None, logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initialize with the specified filters.
 

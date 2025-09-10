@@ -2,12 +2,12 @@ import traceback
 from typing import Union, List, Optional
 
 from seppl import init_initializable, Initializable, Session
-from ._filter import Filter, filter_data
+from ._filter import BatchFilter, filter_data
 from ._reader import Reader
 from ._writer import Writer, StreamWriter, BatchWriter
 
 
-def _stream_execution(reader: Reader, filters_: Optional[Union[Filter, List[Filter]]], writer: Optional[Writer], session: Session):
+def _stream_execution(reader: Reader, filters_: Optional[Union[BatchFilter, List[BatchFilter]]], writer: Optional[Writer], session: Session):
     """
     Executes the pipeline in streaming mode.
 
@@ -43,7 +43,7 @@ def _stream_execution(reader: Reader, filters_: Optional[Union[Filter, List[Filt
             break
 
 
-def _batch_execution(reader: Reader, filters_: Optional[Union[Filter, List[Filter]]], writer: Optional[Writer], session: Session):
+def _batch_execution(reader: Reader, filters_: Optional[Union[BatchFilter, List[BatchFilter]]], writer: Optional[Writer], session: Session):
     """
     Executes the pipeline in batch mode.
 
@@ -102,7 +102,7 @@ def _batch_execution(reader: Reader, filters_: Optional[Union[Filter, List[Filte
             raise Exception("Neither stream nor batch writer: %s" % str(type(writer)))
 
 
-def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writer: Optional[Writer],
+def execute(reader: Reader, filters: Optional[Union[BatchFilter, List[BatchFilter]]], writer: Optional[Writer],
             session: Session = None):
     """
     Executes the pipeline.
@@ -117,7 +117,7 @@ def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writ
     :type session: Session
     """
     # assemble filter
-    if isinstance(filters, Filter):
+    if isinstance(filters, BatchFilter):
         filters_ = [filters]
     elif isinstance(filters, list):
         filters_ = filters
