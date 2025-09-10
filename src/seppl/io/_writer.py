@@ -1,10 +1,11 @@
 import abc
 import argparse
-from typing import Iterable
+from typing import Iterable, List, Any
 
 from wai.logging import LOGGING_WARNING
 
-from seppl import InputConsumer, PluginWithLogging, SessionHandler, Session, SkippablePlugin, add_skip_option
+from seppl import InputConsumer, PluginWithLogging, SessionHandler, Session, SkippablePlugin, add_skip_option, \
+    Initializable
 
 
 class Writer(PluginWithLogging, InputConsumer, SessionHandler, SkippablePlugin, abc.ABC):
@@ -193,3 +194,46 @@ class DirectBatchWriter(DirectWriter):
         :type as_bytes: bool
         """
         raise NotImplementedError()
+
+
+class DataCollector(StreamWriter, Initializable):
+    """
+    Writer for collecting the data that has been arriving.
+    """
+
+    def __init__(self, logger_name: str = None, logging_level: str = LOGGING_WARNING):
+        """
+        Initializes the handler.
+
+        :param logger_name: the name to use for the logger
+        :type logger_name: str
+        :param logging_level: the logging level to use
+        :type logging_level: str
+        """
+        super().__init__(logger_name=logger_name, logging_level=logging_level)
+        self._data = None
+
+    def initialize(self):
+        """
+        Initializes the processing, e.g., for opening files or databases.
+        """
+        super().initialize()
+        self._data = []
+
+    def write_stream(self, data):
+        """
+        Saves the data one by one.
+
+        :param data: the data to write (single record or iterable of records)
+        """
+        self._data.append(data)
+
+    @property
+    def data(self) -> List[Any]:
+        """
+        Returns the collected data.
+
+        :return: the collected data
+        :rtype: list
+        """
+        return self._data

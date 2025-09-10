@@ -2,19 +2,19 @@ import traceback
 from typing import Union, List, Optional
 
 from seppl import init_initializable, Initializable, Session
+from ._filter import Filter, filter_data
 from ._reader import Reader
-from ._filter import Filter, MultiFilter
 from ._writer import Writer, StreamWriter, BatchWriter
 
 
-def _stream_execution(reader: Reader, filter_: Optional[Filter], writer: Optional[Writer], session: Session):
+def _stream_execution(reader: Reader, filters_: Optional[Union[Filter, List[Filter]]], writer: Optional[Writer], session: Session):
     """
     Executes the pipeline in streaming mode.
 
     :param reader: the reader to use
     :type reader: Reader
-    :param filter_: the filter to use
-    :type filter_: list or Filter
+    :param filters_: the filter or list of filters to use, can be None
+    :type filters_: list or Filter
     :param writer: the writer to use
     :type writer: Writer
     :param session: the session object to use
@@ -31,27 +31,26 @@ def _stream_execution(reader: Reader, filter_: Optional[Filter], writer: Optiona
             if session.stopped:
                 return
             session.count += 1
-            if (filter_ is not None) and (item is not None):
-                item = filter_.process(item)
-            if session.stopped:
-                return
-            if item is not None:
-                if writer is not None:
-                    writer.write_stream(item)
-            if session.count % session.options.update_interval == 0:
-                session.logger.info("%d records processed..." % session.count)
+            for filtered in filter_data(item, filters_, session=session):
+                if session.stopped:
+                    return
+                if filtered is not None:
+                    if writer is not None:
+                        writer.write_stream(filtered)
+                if session.count % session.options.update_interval == 0:
+                    session.logger.info("%d records processed..." % session.count)
         if reader.has_finished():
             break
 
 
-def _batch_execution(reader: Reader, filter_: Optional[Filter], writer: Optional[Writer], session: Session):
+def _batch_execution(reader: Reader, filters_: Optional[Union[Filter, List[Filter]]], writer: Optional[Writer], session: Session):
     """
     Executes the pipeline in batch mode.
 
     :param reader: the reader to use
     :type reader: Reader
-    :param filter_: the filter(s) to use, can be None
-    :type filter_: list or Filter
+    :param filters_: the filter or list of filters to use, can be None
+    :type filters_: list or Filter
     :param writer: the writer to use
     :type writer: Writer
     :param session: the session object to use
@@ -74,11 +73,17 @@ def _batch_execution(reader: Reader, filter_: Optional[Filter], writer: Optional
     if session.stopped:
         return
 
-    if filter_ is not None:
-        data = filter_.process(data)
+    if filters_ is not None:
+        filtered_data = []
+        for filtered in filter_data(data, filters_, session=session):
+            if session.stopped:
+                return
+            if isinstance(filtered, list):
+                filtered_data.extend(filtered)
+            else:
+                filtered_data.append(filtered)
         session.logger.info("%d records filtered..." % session.count)
-        if not isinstance(data, list):
-            data = [data]
+        data = filtered_data
 
     if session.stopped:
         return
@@ -113,11 +118,11 @@ def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writ
     """
     # assemble filter
     if isinstance(filters, Filter):
-        filter_ = filters
+        filters_ = [filters]
     elif isinstance(filters, list):
-        filter_ = MultiFilter(filters=filters)
+        filters_ = filters
     elif filters is None:
-        filter_ = None
+        filters_ = []
     else:
         raise Exception("Unhandled filter(s) type: %s" % str(type(filters)))
 
@@ -125,25 +130,27 @@ def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writ
     if session is None:
         session = Session()
     reader.session = session
-    if filter_ is not None:
-        filter_.session = session
+    if filters_ is not None:
+        for filter_ in filters_:
+            filter_.session = session
     if writer is not None:
         writer.session = session
 
     # initialize
     if isinstance(reader, Initializable) and not init_initializable(reader, "reader"):
         return
-    if (filter_ is not None) and isinstance(filter_, Initializable) and not init_initializable(filter_, "filter"):
-        return
+    for filter_ in filters_:
+        if isinstance(filter_, Initializable) and not init_initializable(filter_, "filter"):
+            return
     if (writer is not None) and isinstance(writer, Initializable) and not init_initializable(writer, "writer"):
         return
 
     # process data
     try:
         if session.options.force_batch or isinstance(writer, BatchWriter):
-            _batch_execution(reader, filter_, writer, session)
+            _batch_execution(reader, filters_, writer, session)
         else:
-            _stream_execution(reader, filter_, writer, session)
+            _stream_execution(reader, filters_, writer, session)
         session.logger.info("%d records processed in total." % session.count)
     except:
         traceback.print_exc()
@@ -151,7 +158,8 @@ def execute(reader: Reader, filters: Optional[Union[Filter, List[Filter]]], writ
     # clean up
     if isinstance(reader, Initializable):
         reader.finalize()
-    if (filter_ is not None) and isinstance(filter_, Initializable):
-        filter_.finalize()
+    for filter_ in filters_:
+        if isinstance(filter_, Initializable):
+            filter_.finalize()
     if (writer is not None) and isinstance(writer, Initializable):
         writer.finalize()

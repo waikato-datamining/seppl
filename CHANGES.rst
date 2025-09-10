@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.2.22 (????-??-??)
+0.3.0 (????-??-??)
 -------------------
 
 - added `@abc.abstractmethod` decorator where appropriate
@@ -14,6 +14,11 @@ Changelog
   to allow for dynamically locating files during first call to `read()` method after initializing the reader
 - the `placeholders()` function (package: `seppl.placeholders`) now returns the non-input-based ones
   when outputting input-based ones
+- added `DataCollector` writer, which just collects all the data and makes it accessible
+- introduced `StreamFilter` filters to allow for 1-to-m processing (with m>=0)
+- the `MultiFilter` is now a `StreamFilter`
+- added `filter_data` generator function and `FilterPipelineIterator` iterator class for
+  efficiently process data
 
 
 0.2.21 (2025-08-19)

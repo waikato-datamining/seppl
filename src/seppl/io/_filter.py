@@ -1,9 +1,11 @@
 import abc
 import argparse
-from typing import List
+from typing import List, Any, Optional, Union
 
 from wai.logging import LOGGING_WARNING
-from seppl import InputConsumer, OutputProducer, PluginWithLogging, Initializable, init_initializable, Session, SessionHandler, SkippablePlugin, add_skip_option
+
+from seppl import InputConsumer, OutputProducer, PluginWithLogging, Initializable, Session, SessionHandler, \
+    SkippablePlugin, add_skip_option, init_initializable
 
 FILTER_ACTION_KEEP = "keep"
 FILTER_ACTION_DISCARD = "discard"
@@ -12,7 +14,7 @@ FILTER_ACTIONS = [FILTER_ACTION_KEEP, FILTER_ACTION_DISCARD]
 
 class Filter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandler, Initializable, SkippablePlugin, abc.ABC):
     """
-    Base class for filters.
+    Base class for filters. Processes data in batches.
     """
 
     def __init__(self, logger_name: str = None, logging_level: str = LOGGING_WARNING):
@@ -133,6 +135,9 @@ class Filter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandler, I
         :param data: the record(s) to process
         :return: the potentially updated record or None if to drop
         """
+        if self.skip:
+            return data
+
         if isinstance(data, list):
             if self._requires_list_input():
                 result = self._do_process(data)
@@ -155,7 +160,215 @@ class Filter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandler, I
         return result
 
 
-class MultiFilter(Filter, Initializable):
+class StreamFilter(Filter, abc.ABC):
+    """
+    Ancestor for streaming filters. May produce more output items than are being input.
+    """
+
+    def __init__(self, logger_name: str = None, logging_level: str = LOGGING_WARNING):
+        """
+        Initializes the handler.
+
+        :param logger_name: the name to use for the logger
+        :type logger_name: str
+        :param logging_level: the logging level to use
+        :type logging_level: str
+        """
+        super().__init__(logger_name=logger_name, logging_level=logging_level)
+        self._stream_output = []
+
+    def initialize(self):
+        """
+        Initializes the processing, e.g., for opening files or databases.
+        """
+        super().initialize()
+        self._stream_output = []
+
+    @abc.abstractmethod
+    def _do_process_stream(self, data):
+        """
+        Filters the data.
+
+        :param data: the data to filter
+        """
+        raise NotImplementedError()
+
+    def process_stream(self, data):
+        """
+        Filters the data.
+
+        :param data: the data to filter
+        """
+        self._stream_output = []
+        if self.skip:
+            self._stream_output.append(data)
+        else:
+            self._do_process_stream(data)
+
+    def has_output(self) -> bool:
+        """
+        Whether any output is available.
+
+        :return: True if output can be collected
+        :rtype: bool
+        """
+        return len(self._stream_output) > 0
+
+    def output(self) -> Optional[Any]:
+        """
+        Returns the next available output.
+
+        :return: the output, None if nothing to return
+        """
+        if len(self._stream_output) > 0:
+            return self._stream_output.pop(0)
+        else:
+            return None
+
+    def finalize(self):
+        """
+        Finishes the processing, e.g., for closing files or databases.
+        """
+        super().finalize()
+        self._stream_output = []
+
+
+class FilterPipelineIterator:
+    """
+    Iterator for filtering data with zero or more filters efficiently.
+    """
+
+    def __init__(self, data: Any, filters: Optional[Union[Filter, List[Filter]]], session: Optional[Session] = None):
+        """
+        Initializes the filter iterator.
+
+        :param data: the data to filter through the filters
+        :param filters: the filter or list of filters to apply sequentially, can be None
+        :type filters: Filter or list
+        :param session: the optional session object for monitoring the stopped flag
+        :type session: Session
+        """
+        self.data = data
+        if filters is None:
+            self.filters = []
+        elif isinstance(filters, Filter):
+            self.filters = [filters]
+        else:
+            self.filters = filters
+        self.session = session
+        self.finished = False
+        self.pending_filters = []
+        self.first = True
+
+    def __iter__(self):
+        """
+        Returns itself.
+
+        :return: itself
+        :rtype: FilterPipelineIterator
+        """
+        return self
+
+    def __next__(self):
+        """
+        Returns the next filtered data that the filter pipeline generates.
+
+        :return: the filtered data
+        """
+        # finished iterating?
+        if self.finished:
+            raise StopIteration()
+
+        # nothing to do?
+        if self.first:
+            if (self.filters is None) or (len(self.filters) == 0):
+                self.first = False
+                self.finished = True
+                return self.data
+
+        while not self.finished:
+            if (self.session is not None) and self.session.stopped:
+                break
+
+            # determine starting point of next iteration
+            if len(self.pending_filters) > 0:
+                start_index = self.filters.index(self.pending_filters[-1])
+            else:
+                start_index = 0
+
+            # iterate over filters
+            if self.first:
+                output = self.data
+                self.first = False
+            else:
+                output = None
+
+            for i in range(start_index, len(self.filters)):
+                if (self.session is not None) and self.session.stopped:
+                    break
+
+                curr = self.filters[i]
+
+                if output is None:
+                    if isinstance(curr, StreamFilter) and curr.has_output():
+                        if len(self.pending_filters) > 0:
+                            self.pending_filters.pop()
+                        output = curr.output()
+                        if curr.has_output():
+                            self.pending_filters.append(curr)
+                        # last filter? -> return value
+                        if (i == len(self.filters) - 1) and (output is not None):
+                            return output
+                        else:
+                            continue
+
+                else:
+                    if isinstance(curr, StreamFilter):
+                        curr.process_stream(output)
+                        if curr.has_output():
+                            output = curr.output()
+                        else:
+                            output = None
+                        # more output to come?
+                        if curr.has_output():
+                            self.pending_filters.append(curr)
+                    else:
+                        output = curr.process(output)
+
+                # no output produced, ignored rest of filters
+                if output is None:
+                    break
+
+                # last filter -> return value
+                if (i == len(self.filters) - 1) and (output is not None):
+                    return output
+
+            # have we finished processing all the data?
+            self.finished = len(self.pending_filters) == 0
+
+        raise StopIteration()
+
+
+def filter_data(data: Any, filters: Optional[Union[Filter, List[Filter]]], session: Optional[Session] = None) -> Optional[Any]:
+    """
+    Generator for filtering data.
+
+    :param data: the data to filter
+    :param filters: the filter or list of filters to apply sequentially, can be None
+    :type filters: Filter or list
+    :param session: the optional session object for monitoring the stopped flag
+    :type session: Session
+    :return: the filtered data, one by one
+    """
+    iterator = FilterPipelineIterator(data, filters, session=session)
+    while True:
+        try:
+            yield next(iterator)
+        except:
+            break
+
+
+class MultiFilter(StreamFilter, Initializable):
     """
     Combines multiple filters.
     """
@@ -173,6 +386,7 @@ class MultiFilter(Filter, Initializable):
         """
         super().__init__(logger_name=logger_name, logging_level=logging_level)
         self.filters = None if (filters is None) else filters[:]
+        self._iterator = None
 
     def name(self) -> str:
         """
@@ -241,12 +455,66 @@ class MultiFilter(Filter, Initializable):
         :param data: the record to process
         :return: the potentially updated record or None if to drop
         """
-        result = data
-        for f in self.filters:
-            result = f.process(result)
-            if result is None:
-                break
+        # initialize
+        result = []
+
+        # filter data
+        if isinstance(data, types.GeneratorType):
+            for item in data:
+                self._stream_output = []
+                self.process_stream(item)
+                while self.has_output():
+                    result.append(self.output())
+        else:
+            self._stream_output = []
+            self.process_stream(data)
+            while self.has_output():
+                result.append(self.output())
+
+        # prepare output
+        if len(result) == 0:
+            result = None
+        elif len(result) == 1:
+            result = result[0]
+
+        # clean up
+        self._stream_output = []
+
         return result
+
+    def _do_process_stream(self, data):
+        """
+        Filters the data.
+
+        :param data: the data to filter
+        """
+        self._iterator = FilterPipelineIterator(data, self.filters, session=self.session)
+
+    def has_output(self) -> bool:
+        """
+        Whether any output is available.
+
+        :return: True if output can be collected
+        :rtype: bool
+        """
+        if self._iterator is None:
+            return False
+        try:
+            self._stream_output.append(next(self._iterator))
+        except:
+            pass
+        return len(self._stream_output) > 0
+
+    def output(self) -> Optional[Any]:
+        """
+        Returns the next available output.
+
+        :return: the output, None if nothing to return
+        """
+        if len(self._stream_output) > 0:
+            return self._stream_output.pop(0)
+        else:
+            return None
 
     def finalize(self):
         """
