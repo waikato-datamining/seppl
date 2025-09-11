@@ -365,7 +365,7 @@ def filter_data(data: Any, filters: Optional[Union[BatchFilter, List[BatchFilter
     while True:
         try:
             yield next(iterator)
-        except:
+        except StopIteration:
             break
 
 
