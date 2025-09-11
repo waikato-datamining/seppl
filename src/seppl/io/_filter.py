@@ -161,6 +161,9 @@ class BatchFilter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandl
         return result
 
 
+Filter = BatchFilter  # for backwards-compatibility
+
+
 class StreamFilter(BatchFilter, abc.ABC):
     """
     Ancestor for streaming filters. May produce more output items than are being input.
