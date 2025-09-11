@@ -150,7 +150,7 @@ def execute(reader: Reader, filters: Optional[Union[BatchFilter, List[BatchFilte
 
     # batch mode?
     batch_mode = session.options.force_batch or isinstance(writer, BatchWriter)
-    if isinstance(reader, InfiniteReader):
+    if isinstance(reader, InfiniteReader) and reader.is_infinite():
         if session.options.force_batch:
             session.logger.warning("Reader produces data infinitely, disabling batch mode!")
         batch_mode = False

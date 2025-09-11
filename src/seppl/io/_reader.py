@@ -3,8 +3,7 @@ from typing import Iterable
 
 from wai.logging import LOGGING_WARNING
 
-from seppl import OutputProducer, PluginWithLogging
-from seppl import SessionHandler, Session
+from seppl import OutputProducer, PluginWithLogging, SkippablePlugin, SessionHandler, Session
 
 
 class Reader(PluginWithLogging, OutputProducer, SessionHandler, abc.ABC):
@@ -108,4 +107,15 @@ class InfiniteReader:
     """
     Mixin for readers that output data ad infinitum and cannot be run in batch mode.
     """
-    pass
+
+    def is_infinite(self) -> bool:
+        """
+        Returns whether data is being produced indefinitely.
+
+        :return: True if infinite generation
+        :rtype: bool
+        """
+        if isinstance(self, SkippablePlugin):
+            return self.is_skipped
+        else:
+            return True
