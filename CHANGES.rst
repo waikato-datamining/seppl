@@ -19,6 +19,7 @@ Changelog
 - the `MultiFilter` is now a `StreamFilter`
 - added `filter_data` generator function and `FilterPipelineIterator` iterator class for
   efficiently process data
+- the `classes_to_str` and `get_class_name` methods can remove `builtins.` via the clean=True parameter now
 
 
 0.2.21 (2025-08-19)

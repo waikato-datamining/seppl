@@ -339,7 +339,7 @@ def check_compatibility(plugins: List[Plugin], match_all=AnyData):
             raise Exception(
                 "Output(s) of " + index1 + "/" + plugin1.name()
                 + " not compatible with input(s) of " + index2 + "/" + plugin2.name() + ": "
-                + classes_to_str(classes1) + " != " + classes_to_str(classes2))
+                + classes_to_str(classes1, clean=True) + " != " + classes_to_str(classes2, clean=True))
 
 
 class SkippablePlugin:

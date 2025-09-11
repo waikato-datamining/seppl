@@ -59,32 +59,42 @@ def fix_module_name(module: str, cls: str) -> Tuple[str, str]:
     return module, cls
 
 
-def get_class_name(obj: object) -> str:
+def get_class_name(obj: object, clean: bool = False) -> str:
     """
     Returns the fully qualified classname of the Python class or object.
 
     :param obj: the Python class/object to get the classname for
     :type obj: object
+    :param clean: whether to clean up the class name, e.g., remove "builtins."
+    :type clean: bool
     :return: the generated classname
     :rtype: str
     """
     if inspect.isclass(obj):
         m, c = fix_module_name(obj.__module__, obj.__name__)
-        return m + "." + c
+        result = m + "." + c
     else:
-        return get_class_name(obj.__class__)
+        result = get_class_name(obj.__class__)
+
+    if clean:
+        if result.startswith("builtins."):
+            result = result.replace("builtins.", "")
+
+    return result
 
 
-def classes_to_str(classes: List):
+def classes_to_str(classes: List, clean: bool = False):
     """
     Turns a list of classes into a string.
 
     :param classes: the list of classes to convert
     :type classes: list
+    :param clean: whether to clean up the class name, e.g., remove "builtins."
+    :type clean: bool
     :return: the generated string
     :rtype: str
     """
     classes_str = list()
     for cls in classes:
-        classes_str.append(get_class_name(cls))
+        classes_str.append(get_class_name(cls, clean=clean))
     return ", ".join(classes_str)
