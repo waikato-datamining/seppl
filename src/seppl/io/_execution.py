@@ -3,7 +3,7 @@ from typing import Union, List, Optional
 
 from seppl import init_initializable, Initializable, Session
 from ._filter import BatchFilter, filter_data
-from ._reader import Reader
+from ._reader import Reader, InfiniteReader
 from ._writer import Writer, StreamWriter, BatchWriter
 
 
@@ -36,7 +36,10 @@ def _stream_execution(reader: Reader, filters_: Optional[Union[BatchFilter, List
                     return
                 if filtered is not None:
                     if writer is not None:
-                        writer.write_stream(filtered)
+                        if isinstance(writer, StreamWriter):
+                            writer.write_stream(filtered)
+                        elif isinstance(writer, BatchWriter):
+                            writer.write_batch(filtered)
                 if session.count % session.options.update_interval == 0:
                     session.logger.info("%d records processed..." % session.count)
         if reader.has_finished():
@@ -145,9 +148,16 @@ def execute(reader: Reader, filters: Optional[Union[BatchFilter, List[BatchFilte
     if (writer is not None) and isinstance(writer, Initializable) and not init_initializable(writer, "writer"):
         return
 
+    # batch mode?
+    batch_mode = session.options.force_batch or isinstance(writer, BatchWriter)
+    if isinstance(reader, InfiniteReader):
+        if session.options.force_batch:
+            session.logger.warning("Reader produces data infinitely, disabling batch mode!")
+        batch_mode = False
+
     # process data
     try:
-        if session.options.force_batch or isinstance(writer, BatchWriter):
+        if batch_mode:
             _batch_execution(reader, filters_, writer, session)
         else:
             _stream_execution(reader, filters_, writer, session)

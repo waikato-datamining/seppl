@@ -102,3 +102,10 @@ class DirectReader:
         :rtype: Iterable
         """
         raise NotImplementedError()
+
+
+class InfiniteReader:
+    """
+    Mixin for readers that output data ad infinitum and cannot be run in batch mode.
+    """
+    pass
