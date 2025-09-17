@@ -20,10 +20,6 @@ def _stream_execution(reader: Reader, filters_: Optional[Union[BatchFilter, List
     :param session: the session object to use
     :type session: Session
     """
-    if writer is not None:
-        if not isinstance(writer, StreamWriter):
-            raise Exception("Not a stream writer: %s" % str(type(writer)))
-
     while True:
         for item in reader.read():
             if item is None:
