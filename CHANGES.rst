@@ -21,6 +21,7 @@ Changelog
   efficiently process data
 - the `classes_to_str` and `get_class_name` methods can remove `builtins.` via the clean=True parameter now
 - introduced the `InifiniteReader` mixin which automatically disables batch mode
+- added support for caching plugins managed by the `ClassRegistry` via the `ClassCache` class (one for each class hierarchy)
 
 
 0.2.21 (2025-08-19)

@@ -33,6 +33,7 @@ setup(
     install_requires=[
         "setuptools",
         "wai_logging>=0.0.5",
+        "platformdirs",
     ],
     version="0.2.21",
     author='Peter Reutemann',

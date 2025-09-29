@@ -12,6 +12,7 @@ else:
 
 from ._types import get_class_name, get_class
 from ._plugin import Plugin, get_all_names, get_aliases
+from ._class_cache import ClassCache
 
 DEFAULT = "DEFAULT"
 """ the placeholder for the default class listers in the environment variable. """
@@ -58,7 +59,8 @@ class ClassListerRegistry:
 
     def __init__(self, default_class_listers: Union[str, List[str]] = None, env_class_listers: str = None,
                  excluded_class_listers: Union[str, List[str]] = None, env_excluded_class_listers: str = None,
-                 ignored_class_listers: Union[str, List[str]] = None, env_ignored_class_listers: str = None):
+                 ignored_class_listers: Union[str, List[str]] = None, env_ignored_class_listers: str = None,
+                 app_name: str = None, class_cache_env: str = None):
         """
 
         :param default_class_listers: the default class lister(s) to use
@@ -73,6 +75,10 @@ class ClassListerRegistry:
         :type ignored_class_listers: str or list
         :param env_ignored_class_listers: the environment variable to retrieve the class lister(s) providing ignored clases
         :type env_ignored_class_listers: str
+        :param app_name: the name of the app, must be set to enable the class cache
+        :type app_name: str
+        :param class_cache_env: the environment variable to use for specifying the cache use (values: on|off|reset)
+        :type class_cache_env: str
         """
 
         self._classes = dict()
@@ -91,6 +97,11 @@ class ClassListerRegistry:
         self.env_excluded_class_listers = env_excluded_class_listers
         self.ignored_class_listers = ignored_class_listers
         self.env_ignored_class_listers = env_ignored_class_listers
+
+        # class cache
+        self._app_name = app_name
+        self._class_cache_env = class_cache_env
+        self._class_caches: [Dict[str, ClassCache]] = dict()
 
     @property
     def default_class_listers(self) -> Optional[List[str]]:
@@ -534,9 +545,30 @@ class ClassListerRegistry:
 
         :param c: the superclass to initialize the cache for
         :type c: str
-        :return: the list of classes for the superclass
-        :rtype: list
         """
+        # class cache
+        determine_classes = True
+        if self._app_name is not None:
+            cache_action = None
+            if self._class_cache_env is not None:
+                cache_action = os.getenv(self._class_cache_env)
+            if cache_action is None:
+                cache_action = "off"
+            if cache_action == "off":
+                self._class_caches[c] = ClassCache(self._app_name, c, disabled=True)
+            elif cache_action == "reset":
+                self._class_caches[c] = ClassCache(self._app_name, c)
+                self._class_caches[c].reset()
+            elif cache_action == "on":
+                self._class_caches[c] = ClassCache(self._app_name, c)
+                determine_classes = not self._class_caches[c].is_cached()
+            else:
+                print("Invalid class cache action: %s" % cache_action)
+            if not determine_classes and (c in self._class_caches):
+                self._classes[c] = sorted(self._class_caches[c].cache)
+        if not determine_classes:
+            return
+
         all_classes = set()
 
         # from entry points
@@ -564,6 +596,10 @@ class ClassListerRegistry:
                 all_classes.remove(cls)
                 
         self._classes[c] = sorted(list(all_classes))
+
+        # update cache?
+        if c in self._class_caches:
+            self._class_caches[c].cache = self._classes[c]
 
     def plugins(self, c: Union[str, Type], fail_if_empty: bool = True) -> Dict[str, Plugin]:
         """
