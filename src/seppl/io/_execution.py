@@ -102,7 +102,7 @@ def _batch_execution(reader: Reader, filters_: Optional[Union[BatchFilter, List[
 
 
 def execute(reader: Reader, filters: Optional[Union[BatchFilter, List[BatchFilter]]], writer: Optional[Writer],
-            session: Session = None):
+            session: Session = None, pre_initialize=None, post_finalize=None):
     """
     Executes the pipeline.
 
@@ -114,6 +114,8 @@ def execute(reader: Reader, filters: Optional[Union[BatchFilter, List[BatchFilte
     :type writer: Writer
     :param session: the session object to use, creates default one if None
     :type session: Session
+    :param pre_initialize: optional method to execute before the plugins get initialized, takes the session object as only parameter
+    :param post_finalize: optional method to execute after the plugins have been finalized, takes the session object as only parameter
     """
     # assemble filter
     if isinstance(filters, BatchFilter):
@@ -134,6 +136,10 @@ def execute(reader: Reader, filters: Optional[Union[BatchFilter, List[BatchFilte
             filter_.session = session
     if writer is not None:
         writer.session = session
+
+    # custom initialization?
+    if pre_initialize is not None:
+        pre_initialize(session)
 
     # initialize
     if isinstance(reader, Initializable) and not init_initializable(reader, "reader"):
@@ -169,3 +175,7 @@ def execute(reader: Reader, filters: Optional[Union[BatchFilter, List[BatchFilte
             filter_.finalize()
     if (writer is not None) and isinstance(writer, Initializable):
         writer.finalize()
+
+    # custom finalization?
+    if post_finalize is not None:
+        post_finalize(session)
