@@ -275,6 +275,7 @@ def enumerate_plugins(plugins: Iterable[str], aliases: List[str] = None, alias_f
 def load_args(path: str, logger: logging.Logger = None) -> List[str]:
     """
     Loads the arguments from the specified file.
+    Lines starting with # get removed (comments).
 
     :param path: the file containing the arguments
     :type path: str
@@ -292,6 +293,7 @@ def load_args(path: str, logger: logging.Logger = None) -> List[str]:
     with open(path, "r") as fp:
         lines = fp.readlines()
     lines = [x.strip() for x in lines]
+    lines = [x for x in lines if not x.startswith('#')]  # remove comments
     result = split_cmdline(" ".join(lines))
 
     return result
