@@ -1,5 +1,6 @@
 import abc
 import argparse
+import logging
 import types
 from typing import List, Any, Optional, Union
 
@@ -141,10 +142,14 @@ class BatchFilter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandl
 
         if isinstance(data, list):
             if self._requires_list_input():
+                if self.logger().isEnabledFor(logging.DEBUG):
+                    self.logger().debug("do process: %s" % str(id(data)))
                 result = self._do_process(data)
             else:
                 result = []
                 for d in data:
+                    if self.logger().isEnabledFor(logging.DEBUG):
+                        self.logger().debug("do process: %s" % str(id(data)))
                     r = self._do_process(d)
                     if r is not None:
                         if isinstance(r, list):
@@ -154,6 +159,8 @@ class BatchFilter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandl
                 if len(result) == 1:
                     result = result[0]
         else:
+            if self.logger().isEnabledFor(logging.DEBUG):
+                self.logger().debug("do process: %s" % str(id(data)))
             if self._requires_list_input():
                 result = self._do_process([data])
             else:
@@ -207,6 +214,8 @@ class StreamFilter(BatchFilter, abc.ABC):
         if self.skip:
             self._stream_output.append(data)
         else:
+            if self.logger().isEnabledFor(logging.DEBUG):
+                self.logger().debug("do process: %s" % str(id(data)))
             self._do_process_stream(data)
 
     def has_output(self) -> bool:

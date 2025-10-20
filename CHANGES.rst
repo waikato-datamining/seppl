@@ -23,6 +23,7 @@ Changelog
 - introduced the `InifiniteReader` mixin which automatically disables batch mode
 - added support for caching plugins managed by the `ClassRegistry` via the `ClassCache` class (one for each class hierarchy)
 - the `execute` method now supports custom pre-initialization and post-finalization method hooks
+- filters output the object ID before processing the incoming data when logging level is set to `DEBUG`
 
 
 0.2.21 (2025-08-19)
