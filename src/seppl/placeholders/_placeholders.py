@@ -138,9 +138,9 @@ def placeholders(input_based: bool = False) -> List[str]:
     for ph in PLACEHOLDERS_INPUT_BASED:
         if ph in USER_DEFINED_PLACEHOLDERS:
             continue
-        if (not input_based) and (not PLACEHOLDERS_INPUT_BASED[ph]):
+        if input_based and PLACEHOLDERS_INPUT_BASED[ph]:
             result.append(ph)
-        else:
+        if not PLACEHOLDERS_INPUT_BASED[ph]:
             result.append(ph)
     return result
 
