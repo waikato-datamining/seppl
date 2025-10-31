@@ -35,7 +35,7 @@ setup(
         "wai_logging>=0.0.5",
         "platformdirs",
     ],
-    version="0.2.21",
+    version="0.3.0",
     author='Peter Reutemann',
     author_email='fracpete@waikato.ac.nz',
     entry_points={
