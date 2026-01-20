@@ -37,6 +37,29 @@ def unescape_args(args: List[str]) -> List[str]:
     return result
 
 
+def remove_comments(cmd: List[str]) -> List[str]:
+    """
+    Removes any /* ... */ comments from the command.
+
+    :param cmd: the split command
+    :type cmd: list
+    :return: the potentially cleaned up list
+    :rtype: list
+    """
+    result = []
+    comment = False
+
+    for c in cmd:
+        if c == "/*":
+            comment = True
+        elif c == "*/":
+            comment = False
+        elif not comment:
+            result.append(c)
+
+    return result
+
+
 def split_cmdline(cmdline: str, unescape: bool = False) -> List[str]:
     """
     Splits the command-line into arguments.
@@ -51,6 +74,7 @@ def split_cmdline(cmdline: str, unescape: bool = False) -> List[str]:
     result = shlex.split(cmdline)
     if unescape:
         result = unescape_args(result)
+    result = remove_comments(result)
     return result
 
 
@@ -107,6 +131,8 @@ def split_args(args: List[str], handlers: List[str], unescape: bool = False, par
 
     if unescape:
         args = unescape_args(args)
+
+    args = remove_comments(args)
 
     for arg in args:
         handler = resolve_handler(arg, handlers_set, partial=partial)
@@ -322,6 +348,8 @@ def save_args(args: List[str], path: str, prog: str = None, handlers: List[str] 
             logger.info(msg)
         else:
             print(msg)
+
+        args = remove_comments(args)
 
         if handlers is not None:
             split = split_args(args, handlers)

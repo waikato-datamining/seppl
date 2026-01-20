@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.3.1 (????-??-??)
+------------------
+
+- added support for block comments using `/*` and `*/` - anything between these will get removed
+  (new method: `remove_comments`)
+
+
 0.3.0 (2025-10-31)
 -------------------
 
