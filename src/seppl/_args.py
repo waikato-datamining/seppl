@@ -47,14 +47,19 @@ def remove_comments(cmd: List[str]) -> List[str]:
     :rtype: list
     """
     result = []
-    comment = False
+    comment_star = False
+    comment_plus = False
 
     for c in cmd:
         if c == "/*":
-            comment = True
+            comment_star = True
         elif c == "*/":
-            comment = False
-        elif not comment:
+            comment_star = False
+        elif c == "/+":
+            comment_plus = True
+        elif c == "+/":
+            comment_plus = False
+        elif not comment_star and not comment_plus:
             result.append(c)
 
     return result
