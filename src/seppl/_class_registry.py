@@ -503,6 +503,18 @@ class ClassListerRegistry:
 
         return result
 
+    def _class_listers_from_entry_points(self) -> List[str]:
+        """
+        Determines the class listers defined as entry points.
+
+        :return: the class listers
+        :rtype: list
+        """
+        result = []
+        for item in entry_points(group="class_lister"):
+            result.append(item.value)
+        return result
+
     def _determine_from_entry_points(self, c: str) -> List[str]:
         """
         Determines the derived classes via class listers defined as entry points.
@@ -513,11 +525,25 @@ class ClassListerRegistry:
         :rtype: list
         """
         result = []
-        class_listers = []
-        for item in entry_points(group="class_lister"):
-            class_listers.append(item.value)
+        class_listers = self._class_listers_from_entry_points()
         if len(class_listers) > 0:
             result = self._determine_from_class_listers(c, class_listers)
+        return result
+
+    def _class_listers_from_env(self) -> List[str]:
+        """
+        Determines the class listers defined through the environment variable.
+
+        :return: the class listers
+        :rtype: list
+        """
+        result = []
+
+        if os.getenv(self.env_class_listers) is not None:
+            # format: "classlister1,classlister2,..."
+            # classlister format: "module_name:function_name" or "module_name" if "list_classes" as method
+            result = os.getenv(self.env_class_listers).split(",")
+
         return result
 
     def _determine_from_env(self, c: str) -> List[str]:
@@ -531,10 +557,9 @@ class ClassListerRegistry:
         """
         result = []
 
-        if os.getenv(self.env_class_listers) is not None:
-            # format: "classlister1,classlister2,..."
+        class_listers = self._class_listers_from_env()
+        if len(class_listers) > 0:
             # classlister format: "module_name:function_name" or "module_name" if "list_classes" as method
-            class_listers = os.getenv(self.env_class_listers).split(",")
             result = self._determine_from_class_listers(c, class_listers)
 
         return result
@@ -601,6 +626,35 @@ class ClassListerRegistry:
         if c in self._class_caches:
             self._class_caches[c].cache = self._classes[c]
 
+    def all_plugins(self) -> Dict[str, Plugin]:
+        """
+        Returns all registered classes.
+
+        :return: the dictionary of classes, key is superclass
+        :rtype: dict
+        """
+        result = dict()
+        class_listers = self._class_listers_from_entry_points()
+        class_listers.extend(self._class_listers_from_env())
+        for class_lister in class_listers:
+            try:
+                func = get_class_lister(class_lister)
+            except:
+                print("Problem encountered with class lister: %s" % class_lister, file=sys.stderr)
+                traceback.print_exc()
+                continue
+
+            if self.excluded_class_listers is not None:
+                if class_lister in self.excluded_class_listers:
+                    continue
+
+            if inspect.isfunction(func):
+                class_dict = func()
+                for c in class_dict.keys():
+                    result.update(self.plugins(c, fail_if_empty=False))
+
+        return result
+
     def plugins(self, c: Union[str, Type], fail_if_empty: bool = True) -> Dict[str, Plugin]:
         """
         Returns the classes for the specified superclass.
@@ -608,8 +662,8 @@ class ClassListerRegistry:
         :param c: the super class to get the derived classes for (classname or type)
         :param fail_if_empty: whether to raise an exception if no classes present
         :type fail_if_empty: bool
-        :return: the list of classes
-        :rtype: list
+        :return: the dictionary of classes, key is superclass
+        :rtype: dict
         """
         if not isinstance(c, str):
             c = get_class_name(c)
