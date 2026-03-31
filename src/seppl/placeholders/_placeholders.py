@@ -207,6 +207,9 @@ def load_user_defined_placeholders(path: str):
         if len(parts) == 2:
             ph = "{" + parts[0] + "}"
             USER_DEFINED_PLACEHOLDERS.add(ph)
-            add_placeholder(ph, "", False, lambda i: parts[1])
+            # we need early binding via the second parameter
+            def f(ignored, r=parts[1]):
+                return r
+            add_placeholder(ph, "", False, f)
         else:
             print("Invalid placeholder format (key=value): %s" % line)

@@ -7,6 +7,7 @@ Changelog
 - added support for block comments using `/* ... */` and `/+ ... +/` - anything between these will get removed
   (new method: `remove_comments`)
 - added `all_plugins()` method to `ClassRegistry` class
+- `load_user_defined_placeholders` now stores the placeholders correctly (fixed incorrect late lambda binding)
 
 
 0.3.0 (2025-10-31)
