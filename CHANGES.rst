@@ -8,6 +8,7 @@ Changelog
   (new method: `remove_comments`)
 - added `all_plugins()` method to `ClassRegistry` class
 - `load_user_defined_placeholders` now stores the placeholders correctly (fixed incorrect late lambda binding)
+- placeholders got rebranded as variables (`seppl.placeholders` -> `seppl.variables`)
 
 
 0.3.0 (2025-10-31)

@@ -3,7 +3,7 @@ import glob
 import os
 
 from typing import Union, List
-from seppl.placeholders import expand_placeholders
+from seppl.variables import expand_variables
 
 
 def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str]] = None,
@@ -13,7 +13,7 @@ def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str
     Locates all the files from the specified inputs, which may contain globs.
     glob results get sorted to ensure the same file order each time.
     If default_glob is not None and the inputs are pointing to directories, then default_glob
-    gets appended. Automatically expands placeholders that are not input-based, including
+    gets appended. Automatically expands variabless that are not input-based, including
     inside the input list text files.
 
     :param inputs: the input path(s) with optional globs
@@ -42,8 +42,8 @@ def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str
         else:
             raise Exception("Invalid inputs, must be string(s)!")
 
-        # expand placeholders
-        inputs = [expand_placeholders(x) for x in inputs]
+        # expand variables
+        inputs = [expand_variables(x) for x in inputs]
 
         if default_glob is not None:
             for i, inp in enumerate(inputs):
@@ -58,8 +58,8 @@ def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str
         else:
             raise Exception("Invalid input lists, must be string(s)!")
 
-        # expand placeholders
-        input_lists = [expand_placeholders(x) for x in input_lists]
+        # expand variables
+        input_lists = [expand_variables(x) for x in input_lists]
 
     result = []
 
@@ -81,7 +81,7 @@ def locate_files(inputs: Union[str, List[str]], input_lists: Union[str, List[str
                 print("WARNING: Input list points to directory: %s" % inp)
                 continue
             with open(inp, "r") as fp:
-                lines = [expand_placeholders(x.strip()) for x in fp.readlines()]
+                lines = [expand_variables(x.strip()) for x in fp.readlines()]
             for line in lines:
                 if len(line) == 0:
                     continue

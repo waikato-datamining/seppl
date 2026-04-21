@@ -2,7 +2,7 @@ import os
 from typing import List
 
 from ._plugin import Plugin, get_aliases
-from .placeholders import PlaceholderSupporter, placeholder_help
+from .variables import VariableSupporter, variable_help
 
 HELP_FORMAT_TEXT = "text"
 HELP_FORMAT_MARKDOWN = "markdown"
@@ -35,8 +35,8 @@ def generate_plugin_usage(plugin: Plugin, help_format: str = HELP_FORMAT_TEXT, h
         if len(aliases) > 0:
             result += "Alias(es): %s\n\n" % ", ".join(aliases)
         result += plugin.format_help() + "\n"
-        if isinstance(plugin, PlaceholderSupporter):
-            result += "\n" + placeholder_help(markdown=False, obj=plugin) + "\n"
+        if isinstance(plugin, VariableSupporter):
+            result += "\n" + variable_help(markdown=False, obj=plugin) + "\n"
     elif help_format == HELP_FORMAT_MARKDOWN:
         result += "#"*heading_level + " " + plugin.name() + "\n"
         result += "\n"
@@ -49,8 +49,8 @@ def generate_plugin_usage(plugin: Plugin, help_format: str = HELP_FORMAT_TEXT, h
         result += "```\n"
         result += plugin.format_help()
         result += "```\n"
-        if isinstance(plugin, PlaceholderSupporter):
-            result += "\n" + placeholder_help(markdown=True, obj=plugin) + "\n"
+        if isinstance(plugin, VariableSupporter):
+            result += "\n" + variable_help(markdown=True, obj=plugin) + "\n"
     else:
         raise Exception("Unhandled help format: %s" % help_format)
 

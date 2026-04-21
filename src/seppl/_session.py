@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from wai.logging import set_logging_level
 
-from .placeholders import expand_placeholders
+from .variables import expand_variables
 
 
 @dataclass
@@ -54,14 +54,20 @@ class Session:
 
     def expand_placeholders(self, template: str) -> str:
         """
-        Expands the placeholder in the template using the current input.
+        DEPRECATED: use expand_variables
+        """
+        return expand_variables(template)
+
+    def expand_variables(self, template: str) -> str:
+        """
+        Expands the variables in the template using the current input.
 
         :param template: the template to expand
         :type template: str
         :return: the expanded string
         :rtype: str
         """
-        return expand_placeholders(template, current_input=self.current_input)
+        return expand_variables(template, current_input=self.current_input)
 
 
 class SessionHandler(object):

@@ -123,7 +123,9 @@ to make them copyable into remote ssh sessions:
 * `seppl.unescape_args`
 
 
-### Placeholders
+### Placeholders (DEPRECATED)
+
+**DEPRECATED: Use 'variables' instead (see below)**
 
 seppl offers basic support for placeholders in files and directories. If a 
 plugin makes use of placeholders, it should import the relevant indicator
@@ -154,7 +156,7 @@ For example, for an output file of a writer, the call would typically look
 like this:
 
 ```python
-output_file = self.session.expand_placeholders(self.output_file)
+output_file = self.session.expand_variables(self.output_file)
 ```
 
 You can call the expansion also explicitly using the `seppl.placeholders.expand_placeholders`
@@ -176,6 +178,62 @@ It is possible to expand the built-in placeholders using two approaches:
 * `seppl.placeholders.load_user_defined_placeholders` method - loads static placeholders
   from a text file (format: key=value). Useful for placeholders specific to 
   users/environments. These placeholders won't show up in help screens and option lists. 
+
+
+### Variables
+
+seppl offers basic support for variables in files and directories. If a 
+plugin makes use of variables, it should import the relevant indicator
+mixin as the help screen generation outputs variable information at the
+bottom of the screen. The following mixins are available:
+
+* `seppl.variables.VariableSupporter` - for variables that don't rely on the current input, typically *readers*
+* `seppl.variables.InputBasedVariableSupporter` - also supports variables that make use of the current input, typically *filters* and *writers*
+
+When defining argparse options, you can use the `variable_list(...)` 
+method to append a short list of available variables, e.g.:
+
+```python
+from seppl.variables import variable_list
+...
+parser.add_argument("-i", "--input", type=str, required=False, nargs="*", 
+                    help="Path to the file(s) to read; glob syntax is supported; " + variable_list(obj=self))
+```
+
+The `seppl.io.locate_files` method automatically expands variables that do 
+not require the current input.
+
+For expanding variables at runtime, you can use the `expand_variables`
+method of the session object of the plugin, which automatically includes
+the current input as part of the expansion. 
+
+For example, for an output file of a writer, the call would typically look 
+like this:
+
+```python
+output_file = self.session.expand_variables(self.output_file)
+```
+
+You can call the expansion also explicitly using the `seppl.variables.expand_variables`
+method:
+
+```python
+from  seppl.variables import expand_variables
+...
+s1 = expand_variables("{HOME}")
+s2 = expand_variables("{CWD}/output/{INPUT_NAMEEXT}", current_input="/some/where/myfile.txt") 
+```
+
+It is possible to expand the built-in variables using two approaches:
+
+* `seppl.variables.add_variable` method - adds a new the variable alongside its 
+  description and lambda for generating a result from an optional input file.
+  Useful for frameworks that make use of seppl.
+  These variables will show in help screens and option lists.
+* `seppl.variables.load_user_defined_variables` method - loads static variables
+  from a text file (format: key=value). Useful for variables specific to 
+  users/environments. These variables won't show up in help screens and option lists. 
+
 
 
 ### Tools
