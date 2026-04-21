@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.3.1 (????-??-??)
+0.3.1 (2026-04-21)
 ------------------
 
 - added support for block comments using `/* ... */` and `/+ ... +/` - anything between these will get removed
