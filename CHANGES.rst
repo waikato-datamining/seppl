@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.3.2 (????-??-??)
+------------------
+
+- method `save_args` now creates the directory where to store the arguments if non-existent
+
+
 0.3.1 (2026-04-21)
 ------------------
 
