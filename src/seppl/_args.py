@@ -1,5 +1,6 @@
 import copy
 import logging
+import os
 import shlex
 import traceback
 
@@ -358,6 +359,11 @@ def save_args(args: List[str], path: str, prog: str = None, handlers: List[str] 
 
         if handlers is not None:
             split = split_args(args, handlers)
+            basedir = os.path.dirname(path)
+            if not os.path.exists(basedir):
+                if logger is not None:
+                    logger.info("Creating dir: %s" % basedir)
+                os.makedirs(basedir)
             with open(path, "w") as fp:
                 if prog is not None:
                     fp.write(prog + "\n")
