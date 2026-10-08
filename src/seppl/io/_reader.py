@@ -64,7 +64,7 @@ class Reader(PluginWithLogging, OutputProducer, SessionHandler, abc.ABC):
         raise NotImplementedError()
 
 
-class DirectReader:
+class DirectReader(abc.ABC):
     """
     Mixin for readers that can read directly from a file-like object.
     """
