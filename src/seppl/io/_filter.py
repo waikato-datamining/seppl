@@ -515,6 +515,8 @@ class MultiFilter(StreamFilter, Initializable):
             return False
         try:
             self._stream_output.append(next(self._iterator))
+        except StopIteration:
+            pass
         except:
             traceback.print_exc()
         return len(self._stream_output) > 0
