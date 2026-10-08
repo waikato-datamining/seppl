@@ -1,6 +1,7 @@
 import abc
 import argparse
 import logging
+import traceback
 import types
 from typing import List, Any, Optional, Union
 
@@ -515,7 +516,7 @@ class MultiFilter(StreamFilter, Initializable):
         try:
             self._stream_output.append(next(self._iterator))
         except:
-            pass
+            traceback.print_exc()
         return len(self._stream_output) > 0
 
     def output(self) -> Optional[Any]:
