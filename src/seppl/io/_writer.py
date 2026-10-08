@@ -121,7 +121,7 @@ class Writer(PluginWithLogging, InputConsumer, SessionHandler, SkippablePlugin, 
         raise NotImplementedError()
 
 
-class DirectWriter:
+class DirectWriter(abc.ABC):
     """
     Mixin for classes that support direct writing to file-like objects.
     """
