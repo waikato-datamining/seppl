@@ -142,15 +142,17 @@ class BatchFilter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandl
             return data
 
         if isinstance(data, list):
+            if self.logger().isEnabledFor(logging.DEBUG):
+                self.logger().debug("do process (list): %d items" % len(data))
             if self._requires_list_input():
                 if self.logger().isEnabledFor(logging.DEBUG):
-                    self.logger().debug("do process: %s" % str(id(data)))
+                    self.logger().debug("do process (list): id=%s" % str(id(data)))
                 result = self._do_process(data)
             else:
                 result = []
                 for d in data:
                     if self.logger().isEnabledFor(logging.DEBUG):
-                        self.logger().debug("do process: %s" % str(id(data)))
+                        self.logger().debug("do process (list): id=%s" % str(id(data)))
                     r = self._do_process(d)
                     if r is not None:
                         if isinstance(r, list):
@@ -161,7 +163,9 @@ class BatchFilter(PluginWithLogging, InputConsumer, OutputProducer, SessionHandl
                     result = result[0]
         else:
             if self.logger().isEnabledFor(logging.DEBUG):
-                self.logger().debug("do process: %s" % str(id(data)))
+                self.logger().debug("do process (stream)")
+            if self.logger().isEnabledFor(logging.DEBUG):
+                self.logger().debug("do process (stream): id=%s" % str(id(data)))
             if self._requires_list_input():
                 result = self._do_process([data])
             else:
@@ -216,7 +220,7 @@ class StreamFilter(BatchFilter, abc.ABC):
             self._stream_output.append(data)
         else:
             if self.logger().isEnabledFor(logging.DEBUG):
-                self.logger().debug("do process: %s" % str(id(data)))
+                self.logger().debug("do process (stream): id=%s" % str(id(data)))
             self._do_process_stream(data)
 
     def has_output(self) -> bool:
