@@ -6,6 +6,7 @@ Changelog
 
 - method `save_args` now creates the directory where to store the arguments if non-existent
 - `MultiFilter` now outputs exceptions
+- filters now output # items in list when DEBUG logging level set
 
 
 0.3.1 (2026-04-21)
